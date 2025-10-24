@@ -7,7 +7,7 @@ import com.avitech.sia.iu.sanidad.dto.AplicacionDTO;
 import com.avitech.sia.iu.sanidad.dto.EventoDTO;
 
 import com.avitech.sia.App;
-import com.avitech.sia.DBUtil; // Import DBUtil
+import com.avitech.sia.db.DB; // Import DB
 import javafx.beans.property.*;
 import javafx.collections.*;
 import javafx.fxml.FXML;
@@ -98,7 +98,7 @@ public class SanidadController {
 
     /* ================= Database Connection Check ================= */
     private void checkDatabaseConnection() {
-        try (Connection connection = DBUtil.getConnection()) {
+        try (Connection connection = DB.get()) {
             if (connection != null && !connection.isClosed()) {
                 lblSystemStatus.setText("Sistema Online – MySQL Conectado");
                 lblSystemStatus.setStyle("-fx-text-fill: #4CAF50;"); // Green color for success
@@ -106,7 +106,7 @@ public class SanidadController {
                 lblSystemStatus.setText("Sistema Offline – MySQL Desconectado");
                 lblSystemStatus.setStyle("-fx-text-fill: #F44336;"); // Red color for error
             }
-        } catch (SQLException e) {
+        } catch (Exception e) {
             lblSystemStatus.setText("Sistema Offline – Error de Conexión MySQL");
             lblSystemStatus.setStyle("-fx-text-fill: #F44336;"); // Red color for error
             System.err.println("Error al conectar a la base de datos: " + e.getMessage());
