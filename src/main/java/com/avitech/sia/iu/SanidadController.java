@@ -7,12 +7,15 @@ import com.avitech.sia.iu.sanidad.dto.AplicacionDTO;
 import com.avitech.sia.iu.sanidad.dto.EventoDTO;
 
 import com.avitech.sia.App;
+import com.avitech.sia.DBUtil; // Import DBUtil
 import javafx.beans.property.*;
 import javafx.collections.*;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.ProgressBarTableCell;
 
+import java.sql.Connection; // Import Connection
+import java.sql.SQLException; // Import SQLException
 import java.time.LocalDate;
 
 public class SanidadController {
@@ -45,7 +48,8 @@ public class SanidadController {
         // Estado cabecera (puedes traerlo de config)
         lblHeader.setText("Administrador");
         lblUserInfo.setText("Administrador");
-        lblSystemStatus.setText("Sistema Offline – MySQL Local");
+        
+        checkDatabaseConnection(); // Check DB connection on initialization
 
         // ------ KPIs demo ------
         kpiAplicaciones.setText("3");
@@ -90,6 +94,23 @@ public class SanidadController {
         cbMedicamento.getSelectionModel().selectFirst();
         dpDesde.setValue(LocalDate.now().minusDays(30));
         dpHasta.setValue(LocalDate.now());
+    }
+
+    /* ================= Database Connection Check ================= */
+    private void checkDatabaseConnection() {
+        try (Connection connection = DBUtil.getConnection()) {
+            if (connection != null && !connection.isClosed()) {
+                lblSystemStatus.setText("Sistema Online – MySQL Conectado");
+                lblSystemStatus.setStyle("-fx-text-fill: #4CAF50;"); // Green color for success
+            } else {
+                lblSystemStatus.setText("Sistema Offline – MySQL Desconectado");
+                lblSystemStatus.setStyle("-fx-text-fill: #F44336;"); // Red color for error
+            }
+        } catch (SQLException e) {
+            lblSystemStatus.setText("Sistema Offline – Error de Conexión MySQL");
+            lblSystemStatus.setStyle("-fx-text-fill: #F44336;"); // Red color for error
+            System.err.println("Error al conectar a la base de datos: " + e.getMessage());
+        }
     }
 
     /* ================= Acciones ================= */
