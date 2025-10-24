@@ -1,6 +1,8 @@
 package com.avitech.sia.iu;
 
 import com.avitech.sia.App;
+import com.avitech.sia.DBUtil;
+import com.avitech.sia.db.UserDAO;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
@@ -11,6 +13,8 @@ import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
 
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Objects;
@@ -46,14 +50,17 @@ public class UsuariosController {
     // Datos
     private final ObservableList<UserRow> baseData = FXCollections.observableArrayList();
     private FilteredList<UserRow> filtered;
+    private UserDAO userDAO;
 
     private final DateTimeFormatter DF = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
 
     @FXML
     private void initialize() {
-        lblSystemStatus.setText("Sistema Offline – MySQL Local");
         lblHeader.setText("Administrador");
         lblUserInfo.setText("Administrador");
+        checkDatabaseConnection();
+
+        userDAO = new UserDAO();
 
         // Opciones filtros
         cbRol.setItems(FXCollections.observableArrayList("Todos los roles", "Administrador", "Supervisor", "Operador"));
@@ -70,8 +77,8 @@ public class UsuariosController {
 
         colAcciones.setCellValueFactory(d -> new SimpleObjectProperty<>(buildActions(d.getValue())));
 
-        // Datos demo (reemplazar cuando conectes BD)
-        seedDemo();
+        // Cargar datos de la base de datos
+        loadUserData();
 
         // Filtrado
         filtered = new FilteredList<>(baseData, r -> true);
@@ -98,14 +105,24 @@ public class UsuariosController {
         btnNuevo.setOnAction(e -> onNuevoUsuario());
     }
 
-    private void seedDemo() {
-        baseData.setAll(
-                new UserRow("María González",     "@mgonzalez", "Administrador", "Activo",   LocalDateTime.now().withHour(20).withMinute(42)),
-                new UserRow("Carlos Pérez",        "@cperez",     "Supervisor",    "Activo",   LocalDateTime.now().withHour(15).withMinute(15)),
-                new UserRow("Ana Rodríguez",       "@arodriguez", "Operador",      "Activo",   LocalDateTime.now().withHour(8).withMinute(15)),
-                new UserRow("Dr. Luis Morales",    "@lmorales",   "Supervisor",    "Activo",   LocalDateTime.now().minusDays(1).withHour(10).withMinute(25)),
-                new UserRow("Elena Vargas",        "@evargas",    "Operador",      "Inactivo", LocalDateTime.now().minusDays(5).withHour(11).withMinute(30))
-        );
+    private void checkDatabaseConnection() {
+        try (Connection connection = DBUtil.getConnection()) {
+            if (connection != null && !connection.isClosed()) {
+                lblSystemStatus.setText("Sistema Online – MySQL Conectado");
+                lblSystemStatus.setStyle("-fx-text-fill: #4CAF50;"); // Green color for success
+            } else {
+                lblSystemStatus.setText("Sistema Offline – MySQL Desconectado");
+                lblSystemStatus.setStyle("-fx-text-fill: #F44336;"); // Red color for error
+            }
+        } catch (SQLException e) {
+            lblSystemStatus.setText("Sistema Offline – Error de Conexión MySQL");
+            lblSystemStatus.setStyle("-fx-text-fill: #F44336;"); // Red color for error
+            System.err.println("Error al conectar a la base de datos: " + e.getMessage());
+        }
+    }
+
+    private void loadUserData() {
+        baseData.setAll(userDAO.getAllUsers());
     }
 
     private void applyFilter() {
