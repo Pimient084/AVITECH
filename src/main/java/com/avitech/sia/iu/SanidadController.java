@@ -19,7 +19,6 @@ import javafx.scene.control.*;
 import javafx.scene.control.cell.ProgressBarTableCell;
 
 import java.sql.Connection;
-import java.sql.SQLException;
 import java.time.LocalDate;
 
 public class SanidadController {
@@ -104,7 +103,7 @@ public class SanidadController {
         long medStockCount = tblMedicamentos.getItems().size();
         long medBajosCount = tblMedicamentos.getItems().stream().filter(m -> m.getNivel() < 0.25).count();
         kpiMedStock.setText(String.valueOf(medStockCount));
-        kpiMedBajos.setText(String.valueOf(medBajosCount) + " bajo");
+        kpiMedBajos.setText(medBajosCount + " bajo");
 
         // KPIs de planes (ejemplo)
         kpiAplicaciones.setText(String.valueOf(tblPlanes.getItems().size()));
