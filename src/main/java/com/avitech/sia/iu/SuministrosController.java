@@ -152,4 +152,26 @@ public class SuministrosController {
         kpiStockBajo.setText(String.valueOf(bajos));
         kpiValor.setText(valor);
     }
+
+    public static class Mov {
+        public final String fecha, item, cantidad, unidad, tipo, responsable, detalles, stock;
+        public final String itemLc, respLc, detallesLc;
+        public final LocalDate localDate;
+
+        public Mov(String fecha, String item, String cantidad, String unidad, String tipo, String responsable, String detalles, String stock) {
+            this.fecha = fecha;
+            this.item = item;
+            this.cantidad = cantidad;
+            this.unidad = unidad;
+            this.tipo = tipo;
+            this.responsable = responsable;
+            this.detalles = detalles;
+            this.stock = stock;
+
+            this.itemLc = item.toLowerCase();
+            this.respLc = responsable.toLowerCase();
+            this.detallesLc = detalles.toLowerCase();
+            this.localDate = LocalDate.parse(fecha);
+        }
+    }
 }
