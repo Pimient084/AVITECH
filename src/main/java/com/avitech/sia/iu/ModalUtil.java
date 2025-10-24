@@ -1,62 +1,45 @@
 package com.avitech.sia.iu;
 
+import com.avitech.sia.App;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
-import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.paint.Color;
+import javafx.scene.layout.Pane;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
-import javafx.stage.StageStyle;
 import javafx.stage.Window;
 
-public final class ModalUtil {
+import java.io.IOException;
 
-    private ModalUtil() {}
+public class ModalUtil {
 
-    /**
-     * Abre un modal y devuelve el controller del FXML ya inicializado.
-     * - Si ownerNode está en una Scene, esa ventana será el owner.
-     * - Si no, busca una ventana visible (fallback), así no depende de App.getPrimaryStage().
-     */
-    @SuppressWarnings("unchecked")
-    public static <T> T openModal(Node ownerNode, String fxmlPath, String title) {
+    public static <T> T openModal(Node owner, String fxmlPath, String title) {
         try {
-            FXMLLoader fx = new FXMLLoader(ModalUtil.class.getResource(fxmlPath));
-            Parent root = fx.load();
+            FXMLLoader loader = new FXMLLoader(App.class.getResource(fxmlPath));
+            Pane page = loader.load();
 
-            Stage dialog = new Stage(StageStyle.TRANSPARENT);
-            dialog.setTitle(title);
-            dialog.initModality(Modality.WINDOW_MODAL);
+            Stage dialogStage = new Stage();
+            dialogStage.setTitle(title);
+            dialogStage.initModality(Modality.WINDOW_MODAL);
+            Window ownerWindow = owner.getScene().getWindow();
+            dialogStage.initOwner(ownerWindow);
+            Scene scene = new Scene(page);
+            dialogStage.setScene(scene);
 
-            // --- Owner seguro ---
-            Window owner = null;
-            if (ownerNode != null && ownerNode.getScene() != null) {
-                owner = ownerNode.getScene().getWindow();
-            }
-            if (owner == null) {
-                // fallback: toma cualquier ventana que esté mostrando
-                owner = Window.getWindows().stream()
-                        .filter(Window::isShowing)
-                        .findFirst()
-                        .orElse(null);
-            }
-            if (owner != null) {
-                dialog.initOwner(owner);
+            T controller = loader.getController();
+
+            // Pass the stage to the controller if it has a setDialogStage method
+            try {
+                controller.getClass().getMethod("setDialogStage", Stage.class).invoke(controller, dialogStage);
+            } catch (Exception e) {
+                // Method not found, ignore
             }
 
-            Scene scene = new Scene(root);
-            scene.setFill(Color.TRANSPARENT);
-            // CSS global (ajusta la ruta si tu theme está en otro lugar)
-            scene.getStylesheets().add(
-                    ModalUtil.class.getResource("/css/theme.css").toExternalForm()
-            );
-            dialog.setScene(scene);
+            dialogStage.showAndWait();
 
-            dialog.showAndWait();
-            return (T) fx.getController();
+            return controller;
 
-        } catch (Exception e) {
+        } catch (IOException e) {
             e.printStackTrace();
             return null;
         }

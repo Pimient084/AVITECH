@@ -1,17 +1,29 @@
 package com.avitech.sia.iu;
 
 import com.avitech.sia.App;
+import com.avitech.sia.db.Suministro;
+import com.avitech.sia.db.SuministroDAO;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.layout.Pane;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
 
+import java.io.IOException;
+import java.math.BigDecimal;
+import java.text.NumberFormat;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
+import java.util.Locale;
+import java.util.stream.Collectors;
 
-/** Controlador base de Suministros: navegación lista, filtros dummy y tabla. */
+/** Controlador de Suministros conectado a la base de datos. */
 public class SuministrosController {
 
     /* topbar / sidebar */
@@ -32,21 +44,24 @@ public class SuministrosController {
     @FXML private TableView<Mov> tblMovs;
     @FXML private TableColumn<Mov, String> colFecha, colItem, colCant, colUnidad, colTipo, colResp, colDet, colStock, colAccion;
 
+    @FXML private Button btnEntrada;
+    @FXML private Button btnSalida;
+
+    private final SuministroDAO suministroDAO = new SuministroDAO();
     private final ObservableList<Mov> master = FXCollections.observableArrayList();
     private final ObservableList<Mov> filtered = FXCollections.observableArrayList();
 
     @FXML
     private void initialize() {
-        lblSystemStatus.setText("Sistema Offline – MySQL Local");
+        lblSystemStatus.setText("Sistema Online – MySQL Local");
         lblHeader.setText("Administrador");
         lblUserInfo.setText("Administrador");
 
         /* combos / fechas */
         cbTipo.setItems(FXCollections.observableArrayList("Todos", "Entrada", "Salida"));
-        cbResp.setItems(FXCollections.observableArrayList("Todos", "María García", "Juan Pérez", "Carlos Ruiz", "Luis Torres"));
         cbTipo.getSelectionModel().selectFirst();
-        cbResp.getSelectionModel().selectFirst();
-        dpDesde.setValue(LocalDate.now().minusDays(7));
+        // cbResp se llena dinámicamente en loadSuministros()
+        dpDesde.setValue(LocalDate.now().minusDays(30));
         dpHasta.setValue(LocalDate.now());
 
         /* columnas */
@@ -71,27 +86,122 @@ public class SuministrosController {
             }
         });
 
-        seed();       // datos de ejemplo
-        applyFilter();// primer filtrado
-        refreshKpis();// KPIs
+        loadSuministros();
+        applyFilter();
+        refreshKpis();
     }
+
+    private void loadSuministros() {
+        try {
+            List<Suministro> suministros = suministroDAO.getAll();
+            master.setAll(
+                    suministros.stream()
+                            .map(Mov::new)
+                            .collect(Collectors.toList())
+            );
+
+            // Actualizar combo de responsables dinámicamente
+            List<String> responsables = suministros.stream()
+                    .map(Suministro::getResponsable)
+                    .distinct()
+                    .sorted()
+                    .collect(Collectors.toList());
+            responsables.add(0, "Todos");
+            cbResp.setItems(FXCollections.observableArrayList(responsables));
+            cbResp.getSelectionModel().selectFirst();
+
+        } catch (Exception e) {
+            // En una app real, usar un logger y un diálogo de error más elegante
+            e.printStackTrace();
+            new Alert(Alert.AlertType.ERROR, "Error al cargar los suministros: " + e.getMessage()).showAndWait();
+        }
+    }
+
 
     /* ======= Navegación ======= */
     @FXML private void goDashboard()  { App.goTo("/fxml/dashboard_admin.fxml", "SIA Avitech — ADMIN"); }
     @FXML private void goSupplies()   { /* ya estás aquí */ }
     @FXML private void goHealth()     { App.goTo("/fxml/sanidad.fxml", "SIA Avitech — Sanidad"); }
     @FXML private void goProduction() { App.goTo("/fxml/produccion.fxml", "SIA Avitech — Producción"); }
-    @FXML private void goReports()    { App.goTo("/fxml/reportes.fxml", "SIA Avitech — Reportes"); }
-    @FXML private void goAlerts()     { App.goTo("/fxml/alertas.fxml", "SIA Avitech — Alertas"); }
-    @FXML private void goAudit()      { App.goTo("/fxml/auditoria.fxml", "SIA Avitech — Auditoría"); }
+    @FXML private void goReports()    { App.goTo("C:/Users/ADMIN/Documents/GitHub/AVITECH/src/main/resources/fxml/reportes.fxml", "SIA Avitech — Reportes"); }
+    @FXML private void goAlerts()     { App.goTo("C:/Users/ADMIN/Documents/GitHub/AVITECH/src/main/resources/fxml/alertas.fxml", "SIA Avitech — Alertas"); }
+    @FXML private void goAudit()      { App.goTo("C:/Users/ADMIN/Documents/GitHub/AVITECH/src/main/resources/fxml/auditoria.fxml", "SIA Avitech — Auditoría"); }
     @FXML private void goParams()     { /* pendiente */ }
-    @FXML private void goUsers()      { App.goTo("/fxml/usuarios.fxml", "SIA Avitech — Usuarios"); }
+    @FXML private void goUsers()      { App.goTo("C:/Users/ADMIN/Documents/GitHub/AVITECH/src/main/resources/fxml/usuarios.fxml", "SIA Avitech — Usuarios"); }
     @FXML private void goBackup()     { /* pendiente */ }
-    @FXML private void onExit()       { App.goTo("/fxml/login.fxml", "SIA Avitech — Inicio de sesión"); }
+    @FXML private void onExit()       { App.goTo("C:/Users/ADMIN/Documents/GitHub/AVITECH/src/main/resources/fxml/login.fxml", "SIA Avitech — Inicio de sesión"); }
 
     /* ======= Acciones ======= */
-    @FXML private void onEntrada()   { /* abrir modal entrada */ }
-    @FXML private void onSalida()    { /* abrir modal salida  */ }
+    @FXML
+    private void onEntrada() {
+        try {
+            FXMLLoader loader = new FXMLLoader(App.class.getResource("/fxml/modal_suministro_entrada.fxml"));
+            Pane page = loader.load();
+
+            Stage dialogStage = new Stage();
+            dialogStage.setTitle("Registrar Entrada de Suministro");
+            dialogStage.initModality(Modality.WINDOW_MODAL);
+            dialogStage.initOwner(btnEntrada.getScene().getWindow());
+            Scene scene = new Scene(page);
+            dialogStage.setScene(scene);
+
+            RegEntradaSuministroController controller = loader.getController();
+            controller.setDialogStage(dialogStage);
+            ObservableList<String> responsables = FXCollections.observableArrayList(
+                    master.stream().map(m -> m.responsable).distinct().sorted().collect(Collectors.toList())
+            );
+            controller.setResponsables(responsables);
+
+            dialogStage.showAndWait();
+
+            Suministro result = controller.getResult();
+            if (result != null) {
+                suministroDAO.insert(result);
+                loadSuministros();
+                applyFilter();
+                refreshKpis();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            new Alert(Alert.AlertType.ERROR, "Error al abrir el diálogo de entrada: " + e.getMessage()).showAndWait();
+        }
+    }
+
+    @FXML
+    private void onSalida() {
+        try {
+            FXMLLoader loader = new FXMLLoader(App.class.getResource("/fxml/modal_suministro_salida.fxml"));
+            Pane page = loader.load();
+
+            Stage dialogStage = new Stage();
+            dialogStage.setTitle("Registrar Salida de Suministro");
+            dialogStage.initModality(Modality.WINDOW_MODAL);
+            dialogStage.initOwner(btnSalida.getScene().getWindow());
+            Scene scene = new Scene(page);
+            dialogStage.setScene(scene);
+
+            RegSalidaSuministroController controller = loader.getController();
+            controller.setDialogStage(dialogStage);
+            ObservableList<String> responsables = FXCollections.observableArrayList(
+                    master.stream().map(m -> m.responsable).distinct().sorted().collect(Collectors.toList())
+            );
+            controller.setResponsables(responsables);
+
+            dialogStage.showAndWait();
+
+            Suministro result = controller.getResult();
+            if (result != null) {
+                suministroDAO.insert(result);
+                loadSuministros();
+                applyFilter();
+                refreshKpis();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            new Alert(Alert.AlertType.ERROR, "Error al abrir el diálogo de salida: " + e.getMessage()).showAndWait();
+        }
+    }
+
     @FXML private void onVerStock()  { /* ir al inventario    */ }
     @FXML private void onMoverStock(){ /* flujo mover stock   */ }
     @FXML private void onExportar()  { /* export CSV/XLSX     */ }
@@ -135,63 +245,59 @@ public class SuministrosController {
 
     /* ======= KPIs ======= */
     private void refreshKpis() {
-        long hoy = master.stream().filter(m -> m.fecha.startsWith(LocalDate.now().toString())).count();
-        long activos = 5; // valor dummy
-        long bajos = master.stream().filter(m -> m.tipo.equalsIgnoreCase("Salida")).count(); // ilustrativo
-        String valor = "$3,339.05"; // dummy
+        long hoy = master.stream().filter(m -> m.localDate != null && m.localDate.equals(LocalDate.now())).count();
+        long activos = master.stream().map(m -> m.item).distinct().count();
+        
+        // Placeholder: no hay datos de stock mínimo. Contamos salidas como antes.
+        long bajos = master.stream().filter(m -> m.tipo.equalsIgnoreCase("Salida")).count(); 
+        
+        // Esto no es "valor de stock", es la suma de los valores de los movimientos.
+        BigDecimal valor = master.stream()
+                .filter(m -> m.valorTotal != null)
+                .map(m -> m.valorTotal)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        NumberFormat currencyFormat = NumberFormat.getCurrencyInstance(new Locale("es", "MX"));
 
         kpiMovHoy.setText(String.valueOf(hoy));
         kpiActivos.setText(String.valueOf(activos));
         kpiStockBajo.setText(String.valueOf(bajos));
-        kpiValor.setText(valor);
+        kpiValor.setText(currencyFormat.format(valor));
     }
 
-    /* ======= Datos de ejemplo ======= */
-    private void seed() {
-        master.setAll(
-                new Mov("2024-10-07 12:10", "Concentrado Ponedoras", "50", "kg", "Salida", "María García",
-                        "Motivo: Consumo Galpón 1 | Lote: 2024-001 | Ubicación: Almacén Principal",
-                        "Anterior: 700 / Actual: 650"),
-                new Mov("2024-10-07 09:40", "Concentrado Ponedoras", "500", "kg", "Entrada", "Juan Pérez",
-                        "Proveedor: Nutri-Aves S.A. | Lote: 2024-001 | Ubicación: Almacén Principal",
-                        "Anterior: 200 / Actual: 700"),
-                new Mov("2024-10-06 17:15", "Vitamina E + Selenio", "1", "L", "Entrada", "Carlos Ruiz",
-                        "Proveedor: VetFarm Corp | MEO: 2024-045 | Ubicación: Almacén Medicamentos",
-                        "Anterior: 5 / Actual: 6"),
-                new Mov("2024-10-05 11:30", "Desinfectante Ambiental", "2", "L", "Salida", "Ana López",
-                        "Desinfección Galpón 3 | Ubicación: Almacén Sanitario",
-                        "Anterior: 25 / Actual: 23"),
-                new Mov("2024-10-04 08:15", "Suplemento Mineral", "25", "kg", "Salida", "Luis Torres",
-                        "Aplicación sanitaria | Ubicación: Almacén Principal",
-                        "Anterior: 30 / Actual: 5")
-        );
-    }
-
-    /* ======= DTO simple ======= */
+    /* ======= DTO simple para la tabla ======= */
     public static class Mov {
         public final String fecha, item, cantidad, unidad, tipo, responsable, detalles, stock;
         public final String itemLc, detallesLc, respLc;
         public final LocalDate localDate;
+        public final BigDecimal valorTotal;
 
-        public Mov(String fecha, String item, String cantidad, String unidad, String tipo,
-                   String responsable, String detalles, String stock) {
-            this.fecha = fecha;
-            this.item = item;
-            this.cantidad = cantidad;
-            this.unidad = unidad;
-            this.tipo = tipo;
-            this.responsable = responsable;
-            this.detalles = detalles;
-            this.stock = stock;
+        public Mov(Suministro s) {
+            this.fecha = s.getFecha().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+            this.item = s.getItem();
+            this.cantidad = String.valueOf(s.getCantidad());
+            this.unidad = s.getUnidad();
+            this.tipo = s.getTipo();
+            this.responsable = s.getResponsable();
+
+            String prov = s.getProveedor();
+            String mot = s.getMotivo();
+            StringBuilder det = new StringBuilder();
+            if (prov != null && !prov.trim().isEmpty()) {
+                det.append("Proveedor: ").append(prov);
+            }
+            if (mot != null && !mot.trim().isEmpty()) {
+                if (det.length() > 0) det.append(" | ");
+                det.append("Motivo: ").append(mot);
+            }
+            this.detalles = det.toString();
+            this.stock = ""; // No disponible en la tabla Suministros
 
             this.itemLc = item.toLowerCase();
             this.detallesLc = detalles.toLowerCase();
             this.respLc = responsable.toLowerCase();
-
-            // intenta parsear yyyy-MM-dd desde el prefijo de fecha
-            LocalDate ld = null;
-            try { ld = LocalDate.parse(fecha.substring(0, 10)); } catch (Exception ignored) {}
-            this.localDate = ld;
+            this.localDate = s.getFecha();
+            this.valorTotal = s.getValorTotal();
         }
     }
 }

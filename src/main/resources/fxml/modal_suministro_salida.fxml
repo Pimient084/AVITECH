@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.avitech.sia.iu.RegSalidaSuministroController" spacing="15" styleClass="modal-content">
+    <padding><Insets topRightBottomLeft="20"/></padding>
+
+    <Label text="Registrar Salida de Suministro" styleClass="h3"/>
+
+    <GridPane hgap="10" vgap="12">
+        <columnConstraints>
+            <ColumnConstraints prefWidth="120"/>
+            <ColumnConstraints prefWidth="250" hgrow="ALWAYS"/>
+        </columnConstraints>
+
+        <Label text="Ítem" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+        <TextField fx:id="txtItem" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+
+        <Label text="Cantidad" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+        <HBox spacing="8" GridPane.rowIndex="1" GridPane.columnIndex="1">
+            <TextField fx:id="txtCantidad" prefWidth="100"/>
+            <ComboBox fx:id="cbUnidad" prefWidth="140"/>
+        </HBox>
+
+        <Label text="Responsable" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+        <ComboBox fx:id="cbResponsable" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
+
+        <Label text="Fecha" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
+        <DatePicker fx:id="dpFecha" GridPane.rowIndex="3" GridPane.columnIndex="1"/>
+
+        <Label text="Motivo/Detalle" GridPane.rowIndex="4" GridPane.columnIndex="0"/>
+        <TextArea fx:id="txtMotivo" prefRowCount="3" GridPane.rowIndex="4" GridPane.columnIndex="1"/>
+
+    </GridPane>
+
+    <HBox spacing="10" alignment="CENTER_RIGHT">
+        <Button text="Cancelar" onAction="#onCancel" styleClass="secondary"/>
+        <Button text="Guardar Salida" onAction="#onSave" styleClass="primary"/>
+    </HBox>
+
+</VBox>

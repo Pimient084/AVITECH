@@ -99,8 +99,8 @@
                         <!-- Acciones principales -->
                         <HBox spacing="10">
                             <children>
-                                <Button text="➕ Entrada" styleClass="primary" onAction="#onEntrada"/>
-                                <Button text="➖ Salida"  styleClass="secondary" onAction="#onSalida"/>
+                                <Button fx:id="btnEntrada" text="➕ Entrada" styleClass="primary" onAction="#onEntrada"/>
+                                <Button fx:id="btnSalida" text="➖ Salida"  styleClass="secondary" onAction="#onSalida"/>
                                 <Button text="👁 Ver Stock" styleClass="secondary" onAction="#onVerStock"/>
                             </children>
                         </HBox>
