@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.avitech.sia.iu.sanidad.RegMedicamentoController" spacing="15" styleClass="modal-content">
+    <padding><Insets topRightBottomLeft="20"/></padding>
+
+    <Label text="Registrar Nuevo Medicamento" styleClass="h3"/>
+
+    <GridPane hgap="10" vgap="12">
+        <columnConstraints>
+            <ColumnConstraints prefWidth="120"/>
+            <ColumnConstraints prefWidth="250" hgrow="ALWAYS"/>
+        </columnConstraints>
+
+        <Label text="Nombre" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+        <TextField fx:id="tfNombre" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+
+        <Label text="Presentación" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+        <TextField fx:id="tfPresentacion" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+
+        <Label text="Stock Inicial" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+        <TextField fx:id="tfStock" GridPane.rowIndex="2" GridPane.columnIndex="1" promptText="Ej: 100"/>
+
+        <Label text="Stock Mínimo" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
+        <TextField fx:id="tfStockMinimo" GridPane.rowIndex="3" GridPane.columnIndex="1" promptText="Ej: 10"/>
+
+        <Label text="Valor Unitario" GridPane.rowIndex="4" GridPane.columnIndex="0"/>
+        <TextField fx:id="tfValorUnitario" GridPane.rowIndex="4" GridPane.columnIndex="1" promptText="Ej: 150.50"/>
+
+    </GridPane>
+
+    <HBox spacing="10" alignment="CENTER_RIGHT">
+        <Button text="Cancelar" onAction="#onClose" styleClass="secondary"/>
+        <Button text="Guardar Medicamento" onAction="#onSave" styleClass="primary"/>
+    </HBox>
+
+</VBox>

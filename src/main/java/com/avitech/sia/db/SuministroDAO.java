@@ -4,6 +4,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -52,6 +53,15 @@ public class SuministroDAO {
             ps.setBigDecimal(9, suministro.getValorTotal());
 
             ps.executeUpdate();
+        }
+    }
+
+    public int getDistinctItemCount() throws Exception {
+        String sql = "SELECT COUNT(DISTINCT item) FROM Suministros";
+        try (Connection conn = DB.get();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            return rs.next() ? rs.getInt(1) : 0;
         }
     }
 }

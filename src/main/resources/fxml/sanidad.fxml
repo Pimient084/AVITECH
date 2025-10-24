@@ -73,6 +73,10 @@
                                         fx:id="btnRegistrarEvento"
                                         onAction="#onRegistrarEvento"
                                         />
+                                <Button text="Registrar Medicamento"
+                                        fx:id="btnRegistrarMedicamento"
+                                        onAction="#onRegistrarMedicamento"
+                                        />
                             </children>
                         </HBox>
 

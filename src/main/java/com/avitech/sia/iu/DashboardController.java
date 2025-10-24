@@ -1,14 +1,30 @@
 package com.avitech.sia.iu;
 
 import com.avitech.sia.App;
+import com.avitech.sia.db.*;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
+import javafx.scene.chart.CategoryAxis;
 import javafx.scene.chart.LineChart;
+import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
 import javafx.scene.control.*;
 import javafx.scene.layout.VBox;
 
+import java.time.DayOfWeek;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.Map;
+
 public class DashboardController {
+
+    // DAOs
+    private final LoteDAO loteDAO = new LoteDAO();
+    private final ProduccionDAO produccionDAO = new ProduccionDAO();
+    private final SuministroDAO suministroDAO = new SuministroDAO();
+    private final AlertaDAO alertaDAO = new AlertaDAO();
+    private final GalponDAO galponDAO = new GalponDAO();
+
     // Topbar / user
     @FXML private Label lblHeader;
     @FXML private Label lblSystemStatus;
@@ -41,7 +57,77 @@ public class DashboardController {
 
     @FXML
     private void initialize() {
-        loadMock();
+        lblSystemStatus.setText("Sistema Online – MySQL Local");
+        lblHeader.setText("Administrador");
+        lblUserInfo.setText("Administrador");
+
+        loadDashboardData();
+    }
+
+    private void loadDashboardData() {
+        try {
+            // KPI: Aves Activas
+            int totalAves = loteDAO.getTotalActiveGallinas();
+            lblAvesActivas.setText(String.format("%,d gallinas", totalAves));
+            lblAvesActivasDelta.setText("+0"); // No hay datos históricos para calcular delta
+
+            // KPI: Producción Diaria de Huevos
+            LocalDate today = LocalDate.now();
+            int huevosHoy = produccionDAO.getDailyTotalHuevos(today);
+            lblHuevosDia.setText(String.format("%,d huevos", huevosHoy));
+            lblHuevosDiaDelta.setText("+0%"); // No hay datos históricos para calcular delta
+
+            // KPI: Suministros Disponibles
+            int distinctSuministros = suministroDAO.getDistinctItemCount();
+            lblSuministros.setText(String.format("%d ítems", distinctSuministros));
+            lblSuministrosDelta.setText("-0%"); // No hay datos históricos para calcular delta
+
+            // KPI: Alertas de Stock Bajo
+            int lowStockAlerts = alertaDAO.getActiveLowStockAlertsCount();
+            lblAlertas.setText(String.valueOf(lowStockAlerts));
+            lblAlertasDelta.setText("+0"); // No hay datos históricos para calcular delta
+
+            // Gráfico de Producción Semanal
+            XYChart.Series<String, Number> series = new XYChart.Series<>();
+            LocalDate startOfWeek = today.with(DayOfWeek.MONDAY);
+            Map<LocalDate, Integer> weeklyData = produccionDAO.getWeeklyTotalHuevos(startOfWeek, today);
+            for (int i = 0; i < 7; i++) {
+                LocalDate date = startOfWeek.plusDays(i);
+                String day = date.format(DateTimeFormatter.ofPattern("EEE"));
+                series.getData().add(new XYChart.Data<>(day, weeklyData.getOrDefault(date, 0)));
+            }
+            chartSemanal.getData().setAll(series);
+            ((CategoryAxis) chartSemanal.getXAxis()).setLabel("Día");
+            ((NumberAxis) chartSemanal.getYAxis()).setLabel("Huevos");
+
+            // Alertas Recientes
+            listAlertas.setItems(FXCollections.observableArrayList(alertaDAO.getRecentAlertsDescriptions(3)));
+
+            // Producción por Galpón
+            Map<Integer, GalponDAO.GalponSummary> galponSummaries = galponDAO.getGalponProductionSummary(today);
+            setGalponData(pbG1, lblG1, galponSummaries.get(1));
+            setGalponData(pbG2, lblG2, galponSummaries.get(2));
+            setGalponData(pbG3, lblG3, galponSummaries.get(3));
+            setGalponData(pbG4, lblG4, galponSummaries.get(4));
+            setGalponData(pbG5, lblG5, galponSummaries.get(5));
+            setGalponData(pbG6, lblG6, galponSummaries.get(6));
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            new Alert(Alert.AlertType.ERROR, "Error al cargar datos del Dashboard: " + e.getMessage()).showAndWait();
+            lblSystemStatus.setText("Sistema Offline – Error de BD");
+        }
+    }
+
+    private void setGalponData(ProgressBar pb, Label lbl, GalponDAO.GalponSummary summary) {
+        if (summary != null) {
+            double pct = summary.capacidad() == 0 ? 0 : Math.min(1.0, summary.currentProduction() / (double) summary.capacidad());
+            pb.setProgress(pct);
+            lbl.setText(summary.currentProduction() + "/" + summary.capacidad() + " (" + Math.round(pct * 100) + "%)");
+        } else {
+            pb.setProgress(0);
+            lbl.setText("N/A");
+        }
     }
 
     public void setHeader(String header) {
@@ -54,7 +140,7 @@ public class DashboardController {
     }
 
     /* ======== NAV (stubs) ======== */
-    @FXML private void goDashboard()  { App.goTo("/fxml/dashboard_admin.fxml", "SIA Avitech — ADMIN"); }
+    @FXML private void goDashboard()  { /* Already here */ }
     @FXML private void goSupplies()   { App.goTo("/fxml/suministros.fxml", "SIA Avitech — Suministros"); }
     @FXML private void goHealth()     { App.goTo("/fxml/sanidad.fxml", "SIA Avitech — Sanidad"); }
     @FXML private void goProduction() { App.goTo("/fxml/produccion.fxml", "SIA Avitech — Producción"); }
@@ -64,56 +150,5 @@ public class DashboardController {
     @FXML private void goParams()     { App.goTo("/fxml/parametros.fxml", "SIA Avitech — Parámetros"); }
     @FXML private void goUsers()      { App.goTo("/fxml/usuarios.fxml", "SIA Avitech — Usuarios"); }
     @FXML private void goBackup()     { App.goTo("/fxml/respaldos.fxml", "SIA Avitech — Respaldos"); }
-
-    private void markActive(String text) {
-        if (sidebar == null) return;
-        sidebar.lookupAll(".side-btn").forEach(n -> n.getStyleClass().remove("active"));
-        sidebar.lookupAll(".side-btn").stream()
-                .filter(n -> n instanceof ToggleButton tb && tb.getText().equals(text))
-                .findFirst().ifPresent(n -> n.getStyleClass().add("active"));
-    }
-
-    /* ======== MOCK DATA para visualizar ======== */
-    private void loadMock() {
-        if (lblSystemStatus != null) lblSystemStatus.setText("Sistema Online – MySQL Local");
-
-        lblAvesActivas.setText("15,280 gallinas");
-        lblAvesActivasDelta.setText("+120");
-        lblHuevosDia.setText("12,450 huevos");
-        lblHuevosDiaDelta.setText("+2.3%");
-        lblSuministros.setText("85 ítems");
-        lblSuministrosDelta.setText("-5.2%");
-        lblAlertas.setText("7 productos");
-        lblAlertasDelta.setText("+3");
-
-        XYChart.Series<String, Number> real = new XYChart.Series<>();
-        real.getData().add(new XYChart.Data<>("Lun", 11800));
-        real.getData().add(new XYChart.Data<>("Mar", 12350));
-        real.getData().add(new XYChart.Data<>("Mié", 12020));
-        real.getData().add(new XYChart.Data<>("Jue", 13260));
-        real.getData().add(new XYChart.Data<>("Vie", 12940));
-        real.getData().add(new XYChart.Data<>("Sáb", 11880));
-        real.getData().add(new XYChart.Data<>("Dom", 12110));
-        chartSemanal.getData().setAll(real);
-
-        listAlertas.setItems(FXCollections.observableArrayList(
-                "Nivel de alimento bajo en Silo 2 · hace 1 hora",
-                "Mantenimiento programado completado · hace 2 horas",
-                "Stock crítico: Vitamina D · hace 3 horas"
-        ));
-
-        setGalpon(pbG1, lblG1, 2100, 2500);
-        setGalpon(pbG2, lblG2, 2380, 2800);
-        setGalpon(pbG3, lblG3, 2080, 2600);
-        setGalpon(pbG4, lblG4, 2610, 2900);
-        setGalpon(pbG5, lblG5, 2295, 2700);
-        setGalpon(pbG6, lblG6, 2503, 2780);
-    }
-
-    private void setGalpon(ProgressBar pb, Label lbl, int actual, int meta) {
-        double pct = meta == 0 ? 0 : Math.min(1.0, actual / (double) meta);
-        pb.setProgress(pct);
-        lbl.setText(actual + "/" + meta + " (" + Math.round(pct * 100) + "%)");
-    }
 
 }

@@ -3,6 +3,7 @@ package com.avitech.sia.iu;
 import com.avitech.sia.App;
 import com.avitech.sia.db.Suministro;
 import com.avitech.sia.db.SuministroDAO;
+import com.avitech.sia.db.UsuarioDAO;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -48,6 +49,7 @@ public class SuministrosController {
     @FXML private Button btnSalida;
 
     private final SuministroDAO suministroDAO = new SuministroDAO();
+    private final UsuarioDAO usuarioDAO = new UsuarioDAO();
     private final ObservableList<Mov> master = FXCollections.observableArrayList();
     private final ObservableList<Mov> filtered = FXCollections.observableArrayList();
 
@@ -101,11 +103,7 @@ public class SuministrosController {
             );
 
             // Actualizar combo de responsables dinámicamente
-            List<String> responsables = suministros.stream()
-                    .map(Suministro::getResponsable)
-                    .distinct()
-                    .sorted()
-                    .collect(Collectors.toList());
+            List<String> responsables = usuarioDAO.getAllNombres();
             responsables.add(0, "Todos");
             cbResp.setItems(FXCollections.observableArrayList(responsables));
             cbResp.getSelectionModel().selectFirst();
@@ -147,9 +145,7 @@ public class SuministrosController {
 
             RegEntradaSuministroController controller = loader.getController();
             controller.setDialogStage(dialogStage);
-            ObservableList<String> responsables = FXCollections.observableArrayList(
-                    master.stream().map(m -> m.responsable).distinct().sorted().collect(Collectors.toList())
-            );
+            ObservableList<String> responsables = FXCollections.observableArrayList(usuarioDAO.getAllNombres());
             controller.setResponsables(responsables);
 
             dialogStage.showAndWait();
@@ -182,9 +178,7 @@ public class SuministrosController {
 
             RegSalidaSuministroController controller = loader.getController();
             controller.setDialogStage(dialogStage);
-            ObservableList<String> responsables = FXCollections.observableArrayList(
-                    master.stream().map(m -> m.responsable).distinct().sorted().collect(Collectors.toList())
-            );
+            ObservableList<String> responsables = FXCollections.observableArrayList(usuarioDAO.getAllNombres());
             controller.setResponsables(responsables);
 
             dialogStage.showAndWait();

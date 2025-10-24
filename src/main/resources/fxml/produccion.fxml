@@ -198,6 +198,16 @@
                             </children>
                         </VBox>
 
+                        <!-- Acciones rápidas -->
+                        <HBox spacing="10">
+                            <children>
+                                <Button text="Registrar Producción" styleClass="primary" prefWidth="220"/>
+                                <Button text="Gestionar Suministros" styleClass="primary" prefWidth="220"/>
+                                <Button text="Registro Sanitario" styleClass="primary" prefWidth="220"/>
+                                <Button text="Generar Reportes" styleClass="primary" prefWidth="220"/>
+                                <Button fx:id="btnGestionarLotes" text="Gestionar Lotes" styleClass="primary" prefWidth="220" onAction="#onGestionarLotes"/>
+                            </children>
+                        </HBox>
                     </children>
                     <padding><Insets topRightBottomLeft="16"/></padding>
                 </VBox>

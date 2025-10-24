@@ -17,6 +17,7 @@ public class RegAplicacionController {
     @FXML private ComboBox<String> cbResponsable;
     @FXML private TextArea taObs;
 
+    private Stage dialogStage;
     private AplicacionDTO result;  // output
 
     @FXML
@@ -29,12 +30,17 @@ public class RegAplicacionController {
         cbResponsable.getItems().addAll("Juan Pérez", "Ana López", "Carlos Rivera");
     }
 
+    public void setDialogStage(Stage dialogStage) {
+        this.dialogStage = dialogStage;
+    }
+
     public AplicacionDTO getResult() { return result; }
 
     @FXML
     private void onClose() {
-        Stage stage = (Stage) dpFecha.getScene().getWindow();
-        stage.close();
+        if (dialogStage != null) {
+            dialogStage.close();
+        }
     }
 
     @FXML

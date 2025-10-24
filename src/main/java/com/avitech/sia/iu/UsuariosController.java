@@ -1,6 +1,7 @@
 package com.avitech.sia.iu;
 
 import com.avitech.sia.App;
+import com.avitech.sia.db.UsuarioDAO;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
@@ -8,14 +9,26 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 public class UsuariosController {
+
+    // DAOs
+    private final UsuarioDAO usuarioDAO = new UsuarioDAO();
 
     // Topbar
     @FXML private Label lblSystemStatus;
@@ -36,7 +49,7 @@ public class UsuariosController {
 
     // Tabla
     @FXML private TableView<UserRow> tblUsuarios;
-    @FXML private TableColumn<UserRow, String> colNombre;
+    @FXML private TableColumn<UserRow, String> colNombre; // Will display 'usuario'
     @FXML private TableColumn<UserRow, String> colUsuario;
     @FXML private TableColumn<UserRow, String> colRol;
     @FXML private TableColumn<UserRow, String> colEstado;
@@ -44,82 +57,79 @@ public class UsuariosController {
     @FXML private TableColumn<UserRow, HBox>   colAcciones;
 
     // Datos
-    private final ObservableList<UserRow> baseData = FXCollections.observableArrayList();
-    private FilteredList<UserRow> filtered;
+    private final ObservableList<UserRow> masterData = FXCollections.observableArrayList();
+    private FilteredList<UserRow> filteredData;
 
     private final DateTimeFormatter DF = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
 
     @FXML
     private void initialize() {
-        lblSystemStatus.setText("Sistema Offline – MySQL Local");
+        lblSystemStatus.setText("Sistema Online – MySQL Local");
         lblHeader.setText("Administrador");
         lblUserInfo.setText("Administrador");
 
         // Opciones filtros
-        cbRol.setItems(FXCollections.observableArrayList("Todos los roles", "Administrador", "Supervisor", "Operador"));
-        cbEstado.setItems(FXCollections.observableArrayList("Todos los estados", "Activo", "Inactivo"));
+        cbRol.setItems(FXCollections.observableArrayList("Todos los roles", "ADMIN", "SUPERVISOR", "OPERADOR"));
+        cbEstado.setItems(FXCollections.observableArrayList("Todos los estados", "Activo", "Inactivo")); // No hay campo 'estado' en DB
         cbRol.getSelectionModel().selectFirst();
         cbEstado.getSelectionModel().selectFirst();
 
         // Columnas
-        colNombre.setCellValueFactory(d -> new SimpleStringProperty(d.getValue().nombre()));
+        colNombre.setCellValueFactory(d -> new SimpleStringProperty(d.getValue().usuario())); // Display usuario in 'Nombre' column
         colUsuario.setCellValueFactory(d -> new SimpleStringProperty(d.getValue().usuario()));
         colRol.setCellValueFactory(d -> new SimpleStringProperty(d.getValue().rol()));
-        colEstado.setCellValueFactory(d -> new SimpleStringProperty(d.getValue().estado()));
-        colUltimoAcc.setCellValueFactory(d -> new SimpleStringProperty(DF.format(d.getValue().ultimoAcceso())));
+        colEstado.setCellValueFactory(d -> new SimpleStringProperty("N/A")); // No hay campo 'estado' en DB
+        colUltimoAcc.setCellValueFactory(d -> new SimpleStringProperty("N/A")); // No hay campo 'ultimo_acceso' en DB
 
         colAcciones.setCellValueFactory(d -> new SimpleObjectProperty<>(buildActions(d.getValue())));
 
-        // Datos demo (reemplazar cuando conectes BD)
-        seedDemo();
+        loadUserData();
 
         // Filtrado
-        filtered = new FilteredList<>(baseData, r -> true);
+        filteredData = new FilteredList<>(masterData, p -> true);
         tfSearch.textProperty().addListener((obs, a, b) -> applyFilter());
         cbRol.valueProperty().addListener((obs, a, b) -> applyFilter());
         cbEstado.valueProperty().addListener((obs, a, b) -> applyFilter());
 
-        tblUsuarios.setItems(filtered);
+        tblUsuarios.setItems(filteredData);
 
         // KPIs atados
-        lblTotal.textProperty().bind(Bindings.size(filtered).asString());
+        lblTotal.textProperty().bind(Bindings.size(filteredData).asString());
         lblActivos.textProperty().bind(Bindings.createStringBinding(
-                () -> String.valueOf(filtered.stream().filter(u -> "Activo".equals(u.estado())).count()),
-                filtered));
+                () -> String.valueOf(filteredData.stream().filter(u -> "Activo".equals("N/A")).count()), // No hay campo 'estado' en DB
+                filteredData));
         lblAdmins.textProperty().bind(Bindings.createStringBinding(
-                () -> String.valueOf(filtered.stream().filter(u -> "Administrador".equals(u.rol())).count()),
-                filtered));
-        // Conectados hoy (demo: usuarios con último acceso del día actual)
+                () -> String.valueOf(filteredData.stream().filter(u -> "ADMIN".equals(u.rol())).count()),
+                filteredData));
         lblConHoy.textProperty().bind(Bindings.createStringBinding(
-                () -> String.valueOf(filtered.stream().filter(u -> u.ultimoAcceso().toLocalDate().equals(LocalDateTime.now().toLocalDate())).count()),
-                filtered));
+                () -> "N/A", // No hay campo 'ultimo_acceso' en DB
+                filteredData));
 
         // CTA nuevo
         btnNuevo.setOnAction(e -> onNuevoUsuario());
     }
 
-    private void seedDemo() {
-        baseData.setAll(
-                new UserRow("María González",     "@mgonzalez", "Administrador", "Activo",   LocalDateTime.now().withHour(20).withMinute(42)),
-                new UserRow("Carlos Pérez",        "@cperez",     "Supervisor",    "Activo",   LocalDateTime.now().withHour(15).withMinute(15)),
-                new UserRow("Ana Rodríguez",       "@arodriguez", "Operador",      "Activo",   LocalDateTime.now().withHour(8).withMinute(15)),
-                new UserRow("Dr. Luis Morales",    "@lmorales",   "Supervisor",    "Activo",   LocalDateTime.now().minusDays(1).withHour(10).withMinute(25)),
-                new UserRow("Elena Vargas",        "@evargas",    "Operador",      "Inactivo", LocalDateTime.now().minusDays(5).withHour(11).withMinute(30))
-        );
+    private void loadUserData() {
+        try {
+            List<UsuarioDAO.Usuario> usuarios = usuarioDAO.getAll();
+            masterData.setAll(usuarios.stream().map(UserRow::new).collect(Collectors.toList()));
+        } catch (Exception e) {
+            showError("Error al cargar usuarios", e);
+        }
     }
 
     private void applyFilter() {
         String q = tfSearch.getText() == null ? "" : tfSearch.getText().trim().toLowerCase();
         String rol = cbRol.getValue();
-        String est = cbEstado.getValue();
+        String estado = cbEstado.getValue(); // Not used as 'estado' is not in DB
 
-        filtered.setPredicate(u -> {
+        filteredData.setPredicate(u -> {
             boolean qOk = q.isEmpty()
-                    || u.nombre().toLowerCase().contains(q)
-                    || u.usuario().toLowerCase().contains(q);
+                    || u.usuario().toLowerCase().contains(q)
+                    || (u.email() != null && u.email().toLowerCase().contains(q));
             boolean rolOk = rol == null || rol.equals("Todos los roles") || Objects.equals(rol, u.rol());
-            boolean estOk = est == null || est.equals("Todos los estados") || Objects.equals(est, u.estado());
-            return qOk && rolOk && estOk;
+            // boolean estadoOk = estado == null || estado.equals("Todos los estados") || Objects.equals(estado, u.estado()); // Not used
+            return qOk && rolOk; // && estadoOk;
         });
     }
 
@@ -132,17 +142,119 @@ public class UsuariosController {
         btnPwd.getStyleClass().add("ghostBtn");
         btnDel.getStyleClass().add("ghostBtn");
 
-        btnEdit.setOnAction(e -> System.out.println("Editar: " + row.nombre()));
-        btnPwd.setOnAction(e -> System.out.println("Credenciales: " + row.nombre()));
-        btnDel.setOnAction(e -> System.out.println("Eliminar: " + row.nombre()));
+        btnEdit.setOnAction(e -> onEditarUsuario(row));
+        btnPwd.setOnAction(e -> onCambiarPassword(row));
+        btnDel.setOnAction(e -> onEliminarUsuario(row));
 
         HBox box = new HBox(6, btnEdit, btnPwd, btnDel);
         return box;
     }
 
+    @FXML
     private void onNuevoUsuario() {
-        // Base: por ahora log. Luego podrás abrir tu modal de creación.
-        System.out.println("Nuevo Usuario… (abrir modal)");
+        try {
+            FXMLLoader loader = new FXMLLoader(App.class.getResource("/fxml/modal_usuario.fxml"));
+            Pane page = loader.load();
+
+            Stage dialogStage = new Stage();
+            dialogStage.setTitle("Registrar Nuevo Usuario");
+            dialogStage.initModality(Modality.WINDOW_MODAL);
+            dialogStage.initOwner(btnNuevo.getScene().getWindow());
+            Scene scene = new Scene(page);
+            dialogStage.setScene(scene);
+
+            RegUsuarioController controller = loader.getController();
+            controller.setDialogStage(dialogStage);
+
+            dialogStage.showAndWait();
+
+            UsuarioDAO.Usuario newUser = controller.getResult();
+            if (newUser != null) {
+                usuarioDAO.insert(newUser);
+                loadUserData();
+                applyFilter();
+            }
+        } catch (IOException e) {
+            showError("Error al abrir el diálogo de nuevo usuario", e);
+        } catch (Exception e) {
+            showError("Error al guardar nuevo usuario", e);
+        }
+    }
+
+    private void onEditarUsuario(UserRow row) {
+        try {
+            FXMLLoader loader = new FXMLLoader(App.class.getResource("/fxml/modal_usuario.fxml"));
+            Pane page = loader.load();
+
+            Stage dialogStage = new Stage();
+            dialogStage.setTitle("Editar Usuario");
+            dialogStage.initModality(Modality.WINDOW_MODAL);
+            dialogStage.initOwner(tblUsuarios.getScene().getWindow());
+            Scene scene = new Scene(page);
+            dialogStage.setScene(scene);
+
+            RegUsuarioController controller = loader.getController();
+            controller.setDialogStage(dialogStage);
+            // Create a UsuarioDAO.Usuario object from UserRow for editing
+            UsuarioDAO.Usuario userToEdit = new UsuarioDAO.Usuario(
+                    row.id(), row.usuario(), row.passwordHash(), row.rol(), row.email(), row.telefono(), row.direccion()
+            );
+            controller.setUsuario(userToEdit);
+
+            dialogStage.showAndWait();
+
+            UsuarioDAO.Usuario updatedUser = controller.getResult();
+            if (updatedUser != null) {
+                usuarioDAO.update(updatedUser);
+                loadUserData();
+                applyFilter();
+            }
+        } catch (IOException e) {
+            showError("Error al abrir el diálogo de edición", e);
+        } catch (Exception e) {
+            showError("Error al actualizar usuario", e);
+        }
+    }
+
+    private void onCambiarPassword(UserRow row) {
+        TextInputDialog dialog = new TextInputDialog();
+        dialog.setTitle("Cambiar Contraseña");
+        dialog.setHeaderText("Cambiar contraseña para " + row.usuario());
+        dialog.setContentText("Nueva contraseña:");
+
+        Optional<String> result = dialog.showAndWait();
+        result.ifPresent(newPassword -> {
+            try {
+                // In a real app, hash this password before sending to DAO
+                usuarioDAO.updatePassword(row.id(), newPassword);
+                new Alert(Alert.AlertType.INFORMATION, "Contraseña actualizada con éxito.").showAndWait();
+            } catch (Exception e) {
+                showError("Error al cambiar contraseña", e);
+            }
+        });
+    }
+
+    private void onEliminarUsuario(UserRow row) {
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        alert.setTitle("Confirmar Eliminación");
+        alert.setHeaderText("¿Está seguro de que desea eliminar al usuario " + row.usuario() + "?");
+        alert.setContentText("Esta acción no se puede deshacer.");
+
+        Optional<ButtonType> result = alert.showAndWait();
+        if (result.isPresent() && result.get() == ButtonType.OK) {
+            try {
+                usuarioDAO.delete(row.id());
+                loadUserData();
+                applyFilter();
+            } catch (Exception e) {
+                showError("Error al eliminar usuario", e);
+            }
+        }
+    }
+
+    private void showError(String header, Exception e) {
+        e.printStackTrace();
+        new Alert(Alert.AlertType.ERROR, header + ": " + e.getMessage()).showAndWait();
     }
 
     /* ================== Navegación ================== */
@@ -154,16 +266,22 @@ public class UsuariosController {
     @FXML private void goAlerts()     { App.goTo("/fxml/alertas.fxml", "SIA Avitech — Alertas"); }
     @FXML private void goAudit()      { App.goTo("/fxml/auditoria.fxml", "SIA Avitech — Auditoría"); }
     @FXML private void goParams()     { App.goTo("/fxml/parametros.fxml", "SIA Avitech — Parámetros"); }
-    @FXML private void goUsers()      { App.goTo("/fxml/usuarios.fxml", "SIA Avitech — Usuarios"); }
+    @FXML private void goUsers()      { /* Already here */ }
     @FXML private void goBackup()     { App.goTo("/fxml/respaldos.fxml", "SIA Avitech — Respaldos"); }
     @FXML private void onExit() {
         App.goTo("/fxml/login.fxml", "SIA Avitech — Inicio de sesión");
     }
 
     /* ===== Modelo de fila ===== */
-    public record UserRow(String nombre,
+    public record UserRow(int id,
                           String usuario,
+                          String passwordHash, // Stored for update, not displayed
                           String rol,
-                          String estado,
-                          LocalDateTime ultimoAcceso) {}
+                          String email,
+                          String telefono,
+                          String direccion) {
+        public UserRow(UsuarioDAO.Usuario u) {
+            this(u.id(), u.usuario(), u.password(), u.rol(), u.email(), u.telefono(), u.direccion());
+        }
+    }
 }

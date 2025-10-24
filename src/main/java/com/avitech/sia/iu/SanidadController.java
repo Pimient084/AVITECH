@@ -7,6 +7,7 @@ import com.avitech.sia.db.MedicamentoDAO;
 import com.avitech.sia.db.PlanSanitarioDAO;
 import com.avitech.sia.iu.sanidad.RegAplicacionController;
 import com.avitech.sia.iu.sanidad.RegEventoController;
+import com.avitech.sia.iu.sanidad.RegMedicamentoController;
 import com.avitech.sia.iu.sanidad.dto.AplicacionDTO;
 import com.avitech.sia.iu.sanidad.dto.EventoDTO;
 import javafx.beans.property.*;
@@ -67,6 +68,8 @@ public class SanidadController {
     private Button btnRegistrarAplicacion;
     @FXML
     private Button btnRegistrarEvento;
+    @FXML
+    private Button btnRegistrarMedicamento; // <--- THIS WAS MISSING
 
     @FXML
     private void initialize() {
@@ -198,7 +201,6 @@ public class SanidadController {
                 // TODO: persistir y refrescar listas/KPIs
             }
         } catch (IOException e) {
-            e.printStackTrace();
             showError("Error al abrir el diálogo", e);
         }
     }
@@ -227,8 +229,37 @@ public class SanidadController {
                 // TODO: persistir y refrescar listas/KPIs
             }
         } catch (IOException e) {
-            e.printStackTrace();
             showError("Error al abrir el diálogo", e);
+        }
+    }
+
+    @FXML
+    private void onRegistrarMedicamento() {
+        try {
+            FXMLLoader loader = new FXMLLoader(App.class.getResource("/fxml/sanidad/modal_reg_medicamento.fxml"));
+            Pane page = loader.load();
+
+            Stage dialogStage = new Stage();
+            dialogStage.setTitle("Registrar Nuevo Medicamento");
+            dialogStage.initModality(Modality.WINDOW_MODAL);
+            dialogStage.initOwner(btnRegistrarMedicamento.getScene().getWindow());
+            Scene scene = new Scene(page);
+            dialogStage.setScene(scene);
+
+            RegMedicamentoController controller = loader.getController();
+            controller.setDialogStage(dialogStage);
+
+            dialogStage.showAndWait();
+
+            Medicamento newMedicamento = controller.getResult();
+            if (newMedicamento != null) {
+                medicamentoDAO.insert(newMedicamento);
+                loadMedicamentos(); // Refresh table
+                loadFilterCombos(); // Refresh combo box if new meds added
+                loadKpis();         // Refresh KPIs
+            }
+        } catch (Exception e) {
+            showError("Error al registrar medicamento", e);
         }
     }
 

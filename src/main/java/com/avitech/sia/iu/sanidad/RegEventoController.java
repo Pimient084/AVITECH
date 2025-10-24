@@ -18,6 +18,7 @@ public class RegEventoController {
     @FXML private TextArea taAcciones;
     @FXML private ComboBox<String> cbResponsable;
 
+    private Stage dialogStage;
     private EventoDTO result;
 
     @FXML
@@ -28,12 +29,17 @@ public class RegEventoController {
         cbResponsable.getItems().addAll("Juan Pérez", "Ana López", "Carlos Rivera");
     }
 
+    public void setDialogStage(Stage dialogStage) {
+        this.dialogStage = dialogStage;
+    }
+
     public EventoDTO getResult() { return result; }
 
     @FXML
     private void onClose() {
-        Stage stage = (Stage) dpFecha.getScene().getWindow();
-        stage.close();
+        if (dialogStage != null) {
+            dialogStage.close();
+        }
     }
 
     @FXML

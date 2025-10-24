@@ -3,6 +3,7 @@ package com.avitech.sia.db;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -28,5 +29,24 @@ public class MedicamentoDAO {
             }
         }
         return medicamentos;
+    }
+
+    public void insert(Medicamento medicamento) throws Exception {
+        String sql = "INSERT INTO Medicamentos (nombre, presentacion, stock, stock_minimo, valor_unitario) VALUES (?, ?, ?, ?, ?)";
+        try (Connection conn = DB.get();
+             PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            ps.setString(1, medicamento.getNombre());
+            ps.setString(2, medicamento.getPresentacion());
+            ps.setInt(3, medicamento.getStock());
+            ps.setInt(4, medicamento.getStockMinimo());
+            ps.setBigDecimal(5, medicamento.getValorUnitario());
+            ps.executeUpdate();
+
+            try (ResultSet rs = ps.getGeneratedKeys()) {
+                if (rs.next()) {
+                    medicamento.setId(rs.getInt(1));
+                }
+            }
+        }
     }
 }
