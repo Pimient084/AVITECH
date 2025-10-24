@@ -10,6 +10,8 @@ import com.avitech.sia.App;
 import com.avitech.sia.db.DB;
 import com.avitech.sia.db.MedicamentoDAO;
 import com.avitech.sia.db.PlanSanitarioDAO;
+import com.avitech.sia.iu.sanidad.MedRow;
+import com.avitech.sia.iu.sanidad.PlanRow;
 import javafx.beans.property.*;
 import javafx.collections.*;
 import javafx.fxml.FXML;
@@ -161,7 +163,7 @@ public class SanidadController {
         if (ctrl != null) {
             EventoDTO dto = ctrl.getResult();
             if (dto != null) {
-                System.out.println("Evento guardado: " + dto);
+                System.out.println("Evento guardada: " + dto);
                 // TODO: persistir y refrescar listas/KPIs
             }
         }
@@ -197,30 +199,4 @@ public class SanidadController {
     @FXML private void goBackup()     { App.goTo("/fxml/respaldos.fxml",       "SIA Avitech — Respaldos"); }
     @FXML private void onExit()       { App.goTo("/fxml/login.fxml",           "SIA Avitech — LOGIN"); }
 
-    /* ================= Row models ================= */
-
-    public static class PlanRow {
-        private final StringProperty plan = new SimpleStringProperty();
-        private final StringProperty desc = new SimpleStringProperty();
-        private final StringProperty edad = new SimpleStringProperty();
-        private final StringProperty estado = new SimpleStringProperty();
-        public PlanRow(String p, String d, String e, String s) { plan.set(p); desc.set(d); edad.set(e); estado.set(s); }
-        public StringProperty planProperty()   { return plan; }
-        public StringProperty descProperty()   { return desc; }
-        public StringProperty edadProperty()   { return edad; }
-        public StringProperty estadoProperty() { return estado; }
-    }
-
-    public static class MedRow {
-        private final StringProperty nombre = new SimpleStringProperty();
-        private final IntegerProperty stock = new SimpleIntegerProperty();
-        private final DoubleProperty  nivel = new SimpleDoubleProperty(); // 0..1
-        private final StringProperty inventario = new SimpleStringProperty();
-        public MedRow(String n, int s, double pct, String inv) { nombre.set(n); stock.set(s); nivel.set(pct); inventario.set(inv); }
-        public StringProperty nombreProperty() { return nombre; }
-        public StringProperty stockTextoProperty() { return new SimpleStringProperty(String.valueOf(stock.get()) + " frascos"); }
-        public DoubleProperty  nivelProperty()  { return nivel; }
-        public StringProperty inventarioProperty() { return inventario; }
-        public double getNivel() { return nivel.get(); }
-    }
 }

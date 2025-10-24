@@ -1,18 +1,17 @@
 package com.avitech.sia.db;
 
-import com.avitech.sia.iu.SuministrosController;
+import com.avitech.sia.iu.Mov;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
 public class SuministroDAO {
 
-    public List<SuministrosController.Mov> getSuministros() {
-        List<SuministrosController.Mov> suministros = new ArrayList<>();
+    public List<Mov> getSuministros() {
+        List<Mov> suministros = new ArrayList<>();
         String sql = "SELECT * FROM Suministros";
 
         try (Connection conn = DB.get();
@@ -29,7 +28,7 @@ public class SuministroDAO {
                 String detalles = rs.getString("motivo");
                 String stock = ""; // Esta columna no está en la tabla Suministros
 
-                suministros.add(new SuministrosController.Mov(fecha, item, cantidad, unidad, tipo, responsable, detalles, stock));
+                suministros.add(new Mov(fecha, item, cantidad, unidad, tipo, responsable, detalles, stock));
             }
         } catch (Exception e) {
             e.printStackTrace();

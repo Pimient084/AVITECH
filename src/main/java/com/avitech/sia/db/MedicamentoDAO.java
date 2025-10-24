@@ -1,6 +1,6 @@
 package com.avitech.sia.db;
 
-import com.avitech.sia.iu.SanidadController;
+import com.avitech.sia.iu.sanidad.MedRow;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -10,8 +10,8 @@ import java.util.List;
 
 public class MedicamentoDAO {
 
-    public List<SanidadController.MedRow> getMedicamentos() {
-        List<SanidadController.MedRow> medicamentos = new ArrayList<>();
+    public List<MedRow> getMedicamentos() {
+        List<MedRow> medicamentos = new ArrayList<>();
         String sql = "SELECT * FROM Medicamentos";
 
         try (Connection conn = DB.get();
@@ -23,7 +23,7 @@ public class MedicamentoDAO {
                 int stock = rs.getInt("stock");
                 int stockMinimo = rs.getInt("stock_minimo");
                 double nivel = stockMinimo > 0 ? (double) stock / stockMinimo : 0.0;
-                medicamentos.add(new SanidadController.MedRow(nombre, stock, nivel, "Ver en Inventario"));
+                medicamentos.add(new MedRow(nombre, stock, nivel, "Ver en Inventario"));
             }
         } catch (Exception e) {
             e.printStackTrace();
