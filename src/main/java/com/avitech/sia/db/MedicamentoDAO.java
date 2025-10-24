@@ -30,4 +30,21 @@ public class MedicamentoDAO {
         }
         return medicamentos;
     }
+
+    public List<String> getNombresMedicamentos() {
+        List<String> nombres = new ArrayList<>();
+        String sql = "SELECT nombre FROM Medicamentos ORDER BY nombre";
+
+        try (Connection conn = DB.get();
+             PreparedStatement pstmt = conn.prepareStatement(sql);
+             ResultSet rs = pstmt.executeQuery()) {
+
+            while (rs.next()) {
+                nombres.add(rs.getString("nombre"));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return nombres;
+    }
 }

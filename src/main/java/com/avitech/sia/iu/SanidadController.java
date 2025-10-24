@@ -7,15 +7,17 @@ import com.avitech.sia.iu.sanidad.dto.AplicacionDTO;
 import com.avitech.sia.iu.sanidad.dto.EventoDTO;
 
 import com.avitech.sia.App;
-import com.avitech.sia.db.DB; // Import DB
+import com.avitech.sia.db.DB;
+import com.avitech.sia.db.MedicamentoDAO;
+import com.avitech.sia.db.PlanSanitarioDAO;
 import javafx.beans.property.*;
 import javafx.collections.*;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.ProgressBarTableCell;
 
-import java.sql.Connection; // Import Connection
-import java.sql.SQLException; // Import SQLException
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.time.LocalDate;
 
 public class SanidadController {
@@ -43,6 +45,9 @@ public class SanidadController {
     @FXML private Button btnRegistrarAplicacion;
     @FXML private Button btnRegistrarEvento;
 
+    private MedicamentoDAO medicamentoDAO;
+    private PlanSanitarioDAO planSanitarioDAO;
+
     @FXML
     private void initialize() {
         // Estado cabecera (puedes traerlo de config)
@@ -51,13 +56,8 @@ public class SanidadController {
         
         checkDatabaseConnection(); // Check DB connection on initialization
 
-        // ------ KPIs demo ------
-        kpiAplicaciones.setText("3");
-        kpiAplicacionesDelta.setText("2 completados");
-        kpiMortalidad.setText("3");
-        kpiCasosActivos.setText("0");
-        kpiMedStock.setText("3");
-        kpiMedBajos.setText("1 bajo");
+        medicamentoDAO = new MedicamentoDAO();
+        planSanitarioDAO = new PlanSanitarioDAO();
 
         // ------ Planes ------
         colPlan.setCellValueFactory(d -> d.getValue().planProperty());
@@ -65,13 +65,7 @@ public class SanidadController {
         colEdad.setCellValueFactory(d -> d.getValue().edadProperty());
         colEstadoPlan.setCellValueFactory(d -> d.getValue().estadoProperty());
 
-        ObservableList<PlanRow> planes = FXCollections.observableArrayList(
-                new PlanRow("Programa Vacunación Ponedoras",
-                        "Aplicar según edad y cronograma", "7–72 semanas", "Preventivo"),
-                new PlanRow("Tratamiento Respiratorio",
-                        "Síntomas respiratorios y recuperación", "Todos", "Curativo")
-        );
-        tblPlanes.setItems(planes);
+        loadPlanesSanitarios();
 
         // ------ Medicamentos ------
         colMed.setCellValueFactory(d -> d.getValue().nombreProperty());
@@ -80,12 +74,7 @@ public class SanidadController {
         colBar.setCellValueFactory(d -> d.getValue().nivelProperty().asObject());
         colBar.setCellFactory(ProgressBarTableCell.forTableColumn()); // barra verde
 
-        ObservableList<MedRow> meds = FXCollections.observableArrayList(
-                new MedRow("Vacuna Newcastle", 25, 0.75, "Ver en Inventario"),
-                new MedRow("Antibiótico Respiratorio", 8, 0.18, "Ver en Inventario"), // bajo
-                new MedRow("Vitamina E+Selenio", 12, 0.50, "Ver en Inventario")
-        );
-        tblMedicamentos.setItems(meds);
+        loadMedicamentos();
 
         // ------ Filtros (demo) ------
         cbGalpon.setItems(FXCollections.observableArrayList("Todos", "Galpón 1", "Galpón 2", "Galpón 3"));
@@ -94,6 +83,32 @@ public class SanidadController {
         cbMedicamento.getSelectionModel().selectFirst();
         dpDesde.setValue(LocalDate.now().minusDays(30));
         dpHasta.setValue(LocalDate.now());
+
+        refreshKpis();
+    }
+
+    private void loadPlanesSanitarios() {
+        ObservableList<PlanRow> planes = FXCollections.observableArrayList(planSanitarioDAO.getPlanesSanitarios());
+        tblPlanes.setItems(planes);
+    }
+
+    private void loadMedicamentos() {
+        ObservableList<MedRow> meds = FXCollections.observableArrayList(medicamentoDAO.getMedicamentos());
+        tblMedicamentos.setItems(meds);
+    }
+
+    private void refreshKpis() {
+        // KPIs de medicamentos
+        long medStockCount = tblMedicamentos.getItems().size();
+        long medBajosCount = tblMedicamentos.getItems().stream().filter(m -> m.getNivel() < 0.25).count();
+        kpiMedStock.setText(String.valueOf(medStockCount));
+        kpiMedBajos.setText(String.valueOf(medBajosCount) + " bajo");
+
+        // KPIs de planes (ejemplo)
+        kpiAplicaciones.setText(String.valueOf(tblPlanes.getItems().size()));
+        kpiAplicacionesDelta.setText("0 completados"); // Dummy
+        kpiMortalidad.setText("0"); // Dummy
+        kpiCasosActivos.setText("0"); // Dummy
     }
 
     /* ================= Database Connection Check ================= */
@@ -206,5 +221,6 @@ public class SanidadController {
         public StringProperty stockTextoProperty() { return new SimpleStringProperty(String.valueOf(stock.get()) + " frascos"); }
         public DoubleProperty  nivelProperty()  { return nivel; }
         public StringProperty inventarioProperty() { return inventario; }
+        public double getNivel() { return nivel.get(); }
     }
 }

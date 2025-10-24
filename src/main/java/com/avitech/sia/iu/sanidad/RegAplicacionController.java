@@ -1,11 +1,13 @@
 package com.avitech.sia.iu.sanidad;
 
+import com.avitech.sia.db.MedicamentoDAO;
 import com.avitech.sia.iu.sanidad.dto.AplicacionDTO;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.stage.Stage;
 
 import java.time.LocalDate;
+import java.util.List;
 
 public class RegAplicacionController {
 
@@ -18,15 +20,21 @@ public class RegAplicacionController {
     @FXML private TextArea taObs;
 
     private AplicacionDTO result;  // output
+    private MedicamentoDAO medicamentoDAO;
 
     @FXML
     public void initialize() {
-        // demo: valores de muestra; en real, cargar desde BD vía DAO/Service
+        medicamentoDAO = new MedicamentoDAO();
         dpFecha.setValue(LocalDate.now());
         cbLote.getItems().addAll("Galpón 1", "Galpón 2", "Galpón 3");
-        cbMedicamento.getItems().addAll("Vacuna Newcastle", "Vitamina E+Selenio", "Antibiótico Respiratorio");
+        loadMedicamentos();
         cbVia.getItems().addAll("Oral", "Agua", "Inyectable", "Tópica");
         cbResponsable.getItems().addAll("Juan Pérez", "Ana López", "Carlos Rivera");
+    }
+
+    private void loadMedicamentos() {
+        List<String> medicamentos = medicamentoDAO.getNombresMedicamentos();
+        cbMedicamento.getItems().addAll(medicamentos);
     }
 
     public AplicacionDTO getResult() { return result; }
