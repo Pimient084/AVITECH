@@ -11,14 +11,14 @@
     <!-- ===== SIDEBAR (scroll propio) ===== -->
     <left>
         <ScrollPane fx:id="spMenu"
-                    fitToWidth="true" fitToHeight="false"
+                    fitToWidth="true" fitToHeight="true"
                     vbarPolicy="AS_NEEDED" hbarPolicy="NEVER"
                     pannable="true" prefWidth="270"
                     styleClass="side-scroll">
             <content>
                 <VBox fx:id="sidebar" spacing="10" styleClass="sidebar"
                       minWidth="270" prefWidth="270" maxWidth="270"
-                      fillWidth="true">
+                      fillWidth="true" VBox.vgrow="ALWAYS">
                     <children>
 
                         <Label text="Menú Principal" styleClass="sidebar-title"/>

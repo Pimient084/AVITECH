@@ -9,9 +9,9 @@
 
     <!-- ========== SIDEBAR ========== -->
     <left>
-        <ScrollPane fitToWidth="true" hbarPolicy="NEVER" prefWidth="270" styleClass="side-scroll">
+        <ScrollPane fitToWidth="true" fitToHeight="true" hbarPolicy="NEVER" prefWidth="270" styleClass="side-scroll">
             <content>
-                <VBox spacing="10" styleClass="sidebar" prefWidth="270">
+                <VBox spacing="10" styleClass="sidebar" prefWidth="270" VBox.vgrow="ALWAYS">
                     <children>
                         <Label text="Menú Principal" styleClass="sidebar-title"/>
                         <fx:define><ToggleGroup fx:id="sideGroup"/></fx:define>
