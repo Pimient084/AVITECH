@@ -9,11 +9,35 @@ public class UsuarioDAO {
     // id_usuario, usuario (login), password, rol, email, telefono, direccion
     public record Usuario(int id, String usuario, String password, String rol, String email, String telefono, String direccion) {}
 
+    private final AuditoriaDAO auditoriaDAO = new AuditoriaDAO();
+
     public Optional<Usuario> findByUsuario(String u) throws Exception {
         try (Connection cn = DB.get();
              PreparedStatement ps = cn.prepareStatement(
                      "SELECT id_usuario, usuario, password, rol, email, telefono, direccion FROM Usuarios WHERE usuario=?")) {
             ps.setString(1, u);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return Optional.of(new Usuario(
+                            rs.getInt("id_usuario"),
+                            rs.getString("usuario"),
+                            rs.getString("password"),
+                            rs.getString("rol"),
+                            rs.getString("email"),
+                            rs.getString("telefono"),
+                            rs.getString("direccion")
+                    ));
+                }
+                return Optional.empty();
+            }
+        }
+    }
+
+    public Optional<Usuario> findById(int id) throws Exception {
+        try (Connection cn = DB.get();
+             PreparedStatement ps = cn.prepareStatement(
+                     "SELECT id_usuario, usuario, password, rol, email, telefono, direccion FROM Usuarios WHERE id_usuario=?")) {
+            ps.setInt(1, id);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     return Optional.of(new Usuario(
@@ -66,7 +90,7 @@ public class UsuarioDAO {
         return usuarios;
     }
 
-    public void insert(Usuario usuario) throws Exception {
+    public void insert(Usuario usuario, int actorId) throws Exception {
         String sql = "INSERT INTO Usuarios (usuario, password, rol, email, telefono, direccion) VALUES (?, ?, ?, ?, ?, ?)";
         try (Connection conn = DB.get();
              PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
@@ -80,14 +104,14 @@ public class UsuarioDAO {
 
             try (ResultSet rs = ps.getGeneratedKeys()) {
                 if (rs.next()) {
-                    // For a record, it's better to create a new instance with the ID.
-                    // But for simplicity, we'll assume the ID is not needed after insert for this use case.
+                    int newId = rs.getInt(1);
+                    auditoriaDAO.insert(actorId, "CREATE", "Usuarios", "Usuario creado: " + usuario.usuario(), "id_usuario=" + newId);
                 }
             }
         }
     }
 
-    public void update(Usuario usuario) throws Exception {
+    public void update(Usuario usuario, int actorId) throws Exception {
         String sql = "UPDATE Usuarios SET usuario=?, password=?, rol=?, email=?, telefono=?, direccion=? WHERE id_usuario=?";
         try (Connection conn = DB.get();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -99,25 +123,36 @@ public class UsuarioDAO {
             ps.setString(6, usuario.direccion());
             ps.setInt(7, usuario.id());
             ps.executeUpdate();
+            auditoriaDAO.insert(actorId, "UPDATE", "Usuarios", "Usuario actualizado: " + usuario.usuario(), "id_usuario=" + usuario.id());
         }
     }
 
-    public void delete(int id) throws Exception {
+    public void delete(int id, int actorId) throws Exception {
+        // First, get the user's name for the audit log before deleting
+        Optional<Usuario> userToDelete = findById(id);
+        String userName = userToDelete.map(Usuario::usuario).orElse("Desconocido");
+
         String sql = "DELETE FROM Usuarios WHERE id_usuario=?";
         try (Connection conn = DB.get();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, id);
             ps.executeUpdate();
+            auditoriaDAO.insert(actorId, "DELETE", "Usuarios", "Usuario eliminado: " + userName, "id_usuario=" + id);
         }
     }
 
-    public void updatePassword(int id, String newPasswordHash) throws Exception {
+    public void updatePassword(int id, String newPasswordHash, int actorId) throws Exception {
+        // Get the user's name for the audit log
+        Optional<Usuario> userToUpdate = findById(id);
+        String userName = userToUpdate.map(Usuario::usuario).orElse("Desconocido");
+
         String sql = "UPDATE Usuarios SET password=? WHERE id_usuario=?";
         try (Connection conn = DB.get();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, newPasswordHash);
             ps.setInt(2, id);
             ps.executeUpdate();
+            auditoriaDAO.insert(actorId, "UPDATE_PASSWORD", "Usuarios", "Contraseña de usuario actualizada: " + userName, "id_usuario=" + id);
         }
     }
 }

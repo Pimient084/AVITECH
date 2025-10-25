@@ -1,14 +1,17 @@
 package com.avitech.sia.iu;
 
 import com.avitech.sia.App;
+import com.avitech.sia.db.BackupUtil; // Importar BackupUtil
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
+import javafx.scene.control.Alert.AlertType; // Importar AlertType
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.HBox;
 
+import java.io.File; // Para obtener el tamaño del archivo
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
@@ -87,15 +90,56 @@ public class RespaldosController {
     @FXML private void goReports()     { App.goTo("/fxml/reportes.fxml",         "SIA Avitech — Reportes"); }
     @FXML private void goAlerts()      { App.goTo("/fxml/alertas.fxml",          "SIA Avitech — Alertas"); }
     @FXML private void goAudit()       { App.goTo("/fxml/auditoria.fxml",        "SIA Avitech — Auditoría"); }
-    @FXML private void goParams()      { App.goTo("/fxml/parametros_unidades.fxml", "SIA Avitech — Parámetros"); }
+    @FXML private void goParams()      { App.goTo("/fxml/Parametros/parametros_unidades.fxml", "SIA Avitech — Parámetros"); }
     @FXML private void goUsers()       { App.goTo("/fxml/usuarios.fxml",         "SIA Avitech — Usuarios"); }
 
     /* ==================== Acciones Generales ==================== */
     @FXML private void onNuevoRespaldo() {
-        // dummy: agrega un registro “en progreso/completado”
+        String backupFileName = "";
+        String backupStatus = "Error";
+        String backupSize = "0 KB";
+        
+        try {
+            boolean success = BackupUtil.createBackup();
+            if (success) {
+                backupStatus = "Completado";
+                // Intentar obtener el nombre del archivo de respaldo y su tamaño
+                // Esto asume que BackupUtil.createBackup() imprime el path completo del archivo
+                // Para una implementación más robusta, BackupUtil debería retornar el path del archivo creado
+                File backupDir = new File("C:/MySQLBackups");
+                File[] files = backupDir.listFiles((dir, name) -> name.startsWith("avitech_sia_db_backup_") && name.endsWith(".sql"));
+                if (files != null && files.length > 0) {
+                    // Encontrar el archivo más reciente
+                    File latestFile = null;
+                    long lastModified = Long.MIN_VALUE;
+                    for (File file : files) {
+                        if (file.lastModified() > lastModified) {
+                            latestFile = file;
+                            lastModified = file.lastModified();
+                        }
+                    }
+                    if (latestFile != null) {
+                        backupFileName = latestFile.getName();
+                        long fileSizeKB = latestFile.length() / 1024; // Tamaño en KB
+                        if (fileSizeKB > 1024) {
+                            backupSize = String.format("%.1f MB", fileSizeKB / 1024.0);
+                        } else {
+                            backupSize = fileSizeKB + " KB";
+                        }
+                    }
+                }
+                showAlert(AlertType.INFORMATION, "Respaldo Exitoso", "El respaldo de la base de datos se creó correctamente en C:/MySQLBackups.");
+            } else {
+                showAlert(AlertType.ERROR, "Error en Respaldo", "No se pudo crear el respaldo de la base de datos. Revisa la consola para más detalles.");
+            }
+        } catch (Exception e) {
+            showAlert(AlertType.ERROR, "Error en Respaldo", "Ocurrió una excepción al intentar crear el respaldo: " + e.getMessage());
+            e.printStackTrace();
+        }
+
         var now = LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy, HH:mm"));
-        master.add(0, new BackupItem("avitech_manual_" + System.currentTimeMillis() + ".bak",
-                now, "Manual", "2.0 GB", "Completado"));
+        master.add(0, new BackupItem(backupFileName.isEmpty() ? "avitech_manual_" + System.currentTimeMillis() + ".sql" : backupFileName,
+                now, "Manual", backupSize, backupStatus));
         tblBackups.refresh();
         refreshKpis();
         refreshBanner();
@@ -154,7 +198,7 @@ public class RespaldosController {
 
     private double parseGb(String s) {
         try {
-            var clean = s.trim().toLowerCase().replace("gb","").trim().replace(",","." );
+            var clean = s.trim().toLowerCase().replace("gb","").trim().replace(",",".");
             return Double.parseDouble(clean);
         } catch (Exception e) { return 0d; }
     }
@@ -162,6 +206,14 @@ public class RespaldosController {
     private void info(String msg) {
         // en real: usar diálogo propio
         System.out.println(msg);
+    }
+
+    private void showAlert(AlertType type, String title, String message) {
+        Alert alert = new Alert(type);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(message);
+        alert.showAndWait();
     }
 
     /* DTO record para mayor claridad */

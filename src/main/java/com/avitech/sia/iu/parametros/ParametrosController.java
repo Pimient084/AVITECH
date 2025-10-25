@@ -21,7 +21,7 @@ public class ParametrosController {
         lblUserInfo.setText("Administrador");
 
         // vista por defecto
-        show("/fxml/parametros_unidades.fxml");
+        show("/fxml/Parametros/parametros_unidades.fxml"); // Ruta corregida
     }
 
     // Segmentos

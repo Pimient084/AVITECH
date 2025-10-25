@@ -5,17 +5,21 @@ import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.stage.Stage;
+import java.util.Optional;
 
 public class RegUsuarioController {
 
     @FXML private Label lblTitle;
-    @FXML private TextField txtUsuario, txtEmail, txtTelefono, txtDireccion;
+    @FXML private TextField txtUsuario, txtEmail, txtTelefono;
+    @FXML private TextArea txtDireccion;
     @FXML private PasswordField pwPassword;
     @FXML private ComboBox<String> cbRol;
+    @FXML private Button btnEliminar; // Added for the delete button
 
     private Stage dialogStage;
     private UsuarioDAO.Usuario usuario = null; // For editing existing user
     private boolean isEditMode = false;
+    private boolean deleted = false; // To indicate if the user was deleted
 
     @FXML
     private void initialize() {
@@ -38,18 +42,34 @@ public class RegUsuarioController {
         txtTelefono.setText(usuario.telefono());
         txtDireccion.setText(usuario.direccion());
         pwPassword.setPromptText("Dejar en blanco para no cambiar");
+
+        // Show delete button only in edit mode
+        btnEliminar.setVisible(true);
+        btnEliminar.setManaged(true);
     }
 
     public UsuarioDAO.Usuario getResult() {
         return usuario;
     }
 
+    public boolean isDeleted() {
+        return deleted;
+    }
+
     @FXML
     private void onSave() {
         if (validateInput()) {
-            String passwordHash = pwPassword.getText().isEmpty() ?
-                    (isEditMode ? usuario.password() : "") : // Keep old password if editing and not changed
-                    pwPassword.getText(); // In a real app, hash this password
+            String rawPassword = pwPassword.getText();
+            String passwordHash;
+
+            if (rawPassword.isEmpty()) {
+                passwordHash = isEditMode ? usuario.password() : ""; // Keep old password if editing and not changed, or empty for new if allowed
+            } else {
+                // TODO: Implement proper password hashing here (e.g., using BCrypt)
+                // For now, we'll use the raw password, but this is INSECURE.
+                passwordHash = rawPassword;
+                System.out.println("WARNING: Password is not hashed! Raw password: " + passwordHash); // Temporary debug
+            }
 
             if (isEditMode) {
                 usuario = new UsuarioDAO.Usuario(
@@ -80,6 +100,21 @@ public class RegUsuarioController {
     private void onCancel() {
         usuario = null; // Indicate cancellation
         dialogStage.close();
+    }
+
+    @FXML
+    private void onDelete() {
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        alert.setTitle("Confirmar Eliminación");
+        alert.setHeaderText("¿Está seguro de que desea eliminar al usuario " + usuario.usuario() + "?");
+        alert.setContentText("Esta acción no se puede deshacer.");
+
+        Optional<ButtonType> result = alert.showAndWait();
+        if (result.isPresent() && result.get() == ButtonType.OK) {
+            deleted = true;
+            usuario = null; // Clear user object as it's being deleted
+            dialogStage.close();
+        }
     }
 
     private boolean validateInput() {

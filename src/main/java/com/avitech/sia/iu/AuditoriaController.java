@@ -1,153 +1,99 @@
 package com.avitech.sia.iu;
 
 import com.avitech.sia.App;
-import javafx.beans.property.SimpleStringProperty;
+import com.avitech.sia.db.AuditoriaDAO;
+import com.avitech.sia.db.UsuarioDAO;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
-import javafx.util.Callback;
+import javafx.beans.property.SimpleStringProperty;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
 
 public class AuditoriaController {
 
-    /* ===== Sidebar / topbar ===== */
-    @FXML private Label lblUserInfo;
+    private final AuditoriaDAO auditoriaDAO = new AuditoriaDAO();
+    private final UsuarioDAO usuarioDAO = new UsuarioDAO(); // To get user names for display
+
     @FXML private Label lblSystemStatus;
     @FXML private Label lblHeader;
+    @FXML private Label lblUserInfo;
 
-    /* ===== KPIs ===== */
-    @FXML private Label lblTotal;
-    @FXML private Label lblOK;
-    @FXML private Label lblFail;
-    @FXML private Label lblActivos;
+    @FXML private TextField tfSearch;
+    @FXML private ComboBox<String> cbUsuario;
+    @FXML private DatePicker dpFechaInicio;
+    @FXML private DatePicker dpFechaFin;
 
-    /* ===== Filtros ===== */
-    @FXML private DatePicker dpInicio;
-    @FXML private DatePicker dpFin;
-    @FXML private ComboBox<String> cboUsuario;
-    @FXML private ComboBox<String> cboModulo;
-    @FXML private ComboBox<String> cboAccion;
-    @FXML private TextField txtBuscar;
+    @FXML private TableView<AuditoriaDAO.AuditoriaRecord> tblAuditoria;
+    @FXML private TableColumn<AuditoriaDAO.AuditoriaRecord, String> colFecha;
+    @FXML private TableColumn<AuditoriaDAO.AuditoriaRecord, String> colUsuario;
+    @FXML private TableColumn<AuditoriaDAO.AuditoriaRecord, String> colAccion;
+    @FXML private TableColumn<AuditoriaDAO.AuditoriaRecord, String> colModulo;
+    @FXML private TableColumn<AuditoriaDAO.AuditoriaRecord, String> colDetalle;
+    @FXML private TableColumn<AuditoriaDAO.AuditoriaRecord, String> colReferencia;
 
-    /* ===== Tabla principal ===== */
-    @FXML private TableView<AuditoriaDTO> tvAuditoria;
-    @FXML private TableColumn<AuditoriaDTO, String> colUsuario;
-    @FXML private TableColumn<AuditoriaDTO, String> colFecha;
-    @FXML private TableColumn<AuditoriaDTO, String> colAccion;
-    @FXML private TableColumn<AuditoriaDTO, String> colModulo;
-    @FXML private TableColumn<AuditoriaDTO, String> colDetalle;
-    @FXML private TableColumn<AuditoriaDTO, String> colVer;
-
-    /* ===== Resúmenes ===== */
-    @FXML private ListView<String> lvActividadModulo;
-    @FXML private ListView<String> lvActividadUsuario;
-
-    private final ObservableList<AuditoriaDTO> master = FXCollections.observableArrayList();
+    private final ObservableList<AuditoriaDAO.AuditoriaRecord> masterData = FXCollections.observableArrayList();
+    private final DateTimeFormatter DF = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
 
     @FXML
     private void initialize() {
-        // Cabecera
-        lblSystemStatus.setText("Sistema Offline – MySQL Local");
-        lblHeader.setText("Administrador");
+        lblSystemStatus.setText("Sistema Online – MySQL Local");
+        lblHeader.setText("Administrador"); // TODO: Set actual logged-in user
+        lblUserInfo.setText("Administrador"); // TODO: Set actual logged-in user
 
-        // Filtros
-        dpInicio.setValue(LocalDate.now().minusDays(7));
-        dpFin.setValue(LocalDate.now());
-
-        cboUsuario.setItems(FXCollections.observableArrayList(
-                "Todos los usuarios", "María González", "Carlos Ruiz", "Ana Mendoza", "Sistema"
-        ));
-        cboUsuario.getSelectionModel().selectFirst();
-
-        cboModulo.setItems(FXCollections.observableArrayList(
-                "Todos los módulos", "Producción", "Suministros", "Sanitario", "Reportes", "Alertas", "Usuarios", "Parámetros", "Login", "Respaldos"
-        ));
-        cboModulo.getSelectionModel().selectFirst();
-
-        cboAccion.setItems(FXCollections.observableArrayList(
-                "Todas las acciones", "Ver", "Crear", "Modificar", "Eliminar", "Login", "Logout"
-        ));
-        cboAccion.getSelectionModel().selectFirst();
-
-        // Tabla
-        colUsuario.setCellValueFactory(d -> new SimpleStringProperty(d.getValue().usuario()));
-        colFecha.setCellValueFactory(d -> new SimpleStringProperty(d.getValue().fechaHora()));
-        colAccion.setCellValueFactory(d -> new SimpleStringProperty(d.getValue().accion()));
-        colModulo.setCellValueFactory(d -> new SimpleStringProperty(d.getValue().modulo()));
-        colDetalle.setCellValueFactory(d -> new SimpleStringProperty(d.getValue().detalle()));
-
-        // Botón "Ver Fuente"
-        colVer.setCellFactory(makeVerFuenteCell());
-
-        // Datos demo (placeholders)
-        seedDemo();
-
-        // KPIs
-        refreshKpis();
-
-        // Listas de resumen (demo)
-        lvActividadModulo.setItems(FXCollections.observableArrayList(
-                "Producción • 6 eventos",
-                "Suministros • 4 eventos",
-                "Sanitario • 3 eventos",
-                "Reportes • 2 eventos",
-                "Alertas • 1 evento",
-                "Usuarios • 1 evento"
-        ));
-        lvActividadUsuario.setItems(FXCollections.observableArrayList(
-                "María González • 3 acciones",
-                "Carlos Ruiz • 2 acciones",
-                "Ana Mendoza • 1 acción",
-                "Sistema • 1 acción"
-        ));
-    }
-
-    /* ====== Actions ====== */
-
-    @FXML
-    private void onFiltrar() {
-        // Filtro básico en memoria (placeholder). Luego lo cambiamos a consulta SQL/DAO.
-        String q = txtBuscar.getText() == null ? "" : txtBuscar.getText().trim().toLowerCase();
-        String u = cboUsuario.getValue();
-        String m = cboModulo.getValue();
-        String a = cboAccion.getValue();
-
-        ObservableList<AuditoriaDTO> filtered = master.filtered(it -> {
-            boolean byUser = "Todos los usuarios".equals(u) || it.usuario().equals(u);
-            boolean byMod  = "Todos los módulos".equals(m)  || it.modulo().equals(m);
-            boolean byAct  = "Todas las acciones".equals(a) || it.accion().equals(a);
-            boolean byTxt  = q.isEmpty() || (it.detalle().toLowerCase().contains(q) || it.usuario().toLowerCase().contains(q));
-            return byUser && byMod && byAct && byTxt;
+        // Initialize TableColumns
+        colFecha.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().fecha().format(DF)));
+        colUsuario.setCellValueFactory(cellData -> {
+            try {
+                // This is inefficient for large datasets, consider caching user names
+                return new SimpleStringProperty(usuarioDAO.findById(cellData.getValue().idUsuario())
+                        .map(UsuarioDAO.Usuario::usuario)
+                        .orElse("Desconocido"));
+            } catch (Exception e) {
+                e.printStackTrace();
+                return new SimpleStringProperty("Error");
+            }
         });
+        colAccion.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().accion()));
+        colModulo.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().modulo()));
+        colDetalle.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().detalle()));
+        colReferencia.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().referencia()));
 
-        tvAuditoria.setItems(filtered);
-        refreshKpis();
+        tblAuditoria.setItems(masterData);
+
+        loadAuditData();
+        populateUserComboBox();
     }
 
     @FXML
-    private void onLimpiar() {
-        dpInicio.setValue(LocalDate.now().minusDays(7));
-        dpFin.setValue(LocalDate.now());
-        cboUsuario.getSelectionModel().selectFirst();
-        cboModulo.getSelectionModel().selectFirst();
-        cboAccion.getSelectionModel().selectFirst();
-        txtBuscar.clear();
-
-        tvAuditoria.setItems(master);
-        refreshKpis();
+    private void loadAuditData() {
+        try {
+            masterData.setAll(auditoriaDAO.getAll());
+        } catch (Exception e) {
+            showError("Error al cargar datos de auditoría", e);
+        }
     }
 
-    @FXML
-    private void onExportCsv() {
-        // Placeholder: exportación simple a consola. (Luego lo cambiamos a archivo real)
-        System.out.println("CSV export — registros: " + tvAuditoria.getItems().size());
-        tvAuditoria.getItems().forEach(r -> System.out.println(
-                r.usuario()+";"+r.fechaHora()+";"+r.accion()+";"+r.modulo()+";"+r.detalle()
-        ));
+    private void populateUserComboBox() {
+        try {
+            List<String> userNames = usuarioDAO.getAllNombres();
+            List<String> comboBoxItems = new ArrayList<>();
+            comboBoxItems.add("Todos los usuarios");
+            comboBoxItems.addAll(userNames);
+            cbUsuario.setItems(FXCollections.observableArrayList(comboBoxItems));
+            cbUsuario.getSelectionModel().selectFirst();
+        } catch (Exception e) {
+            showError("Error al cargar usuarios para el filtro", e);
+        }
+    }
+
+    private void showError(String header, Exception e) {
+        e.printStackTrace();
+        new Alert(Alert.AlertType.ERROR, header + ": " + e.getMessage()).showAndWait();
     }
 
     /* ================== Navegación ================== */
@@ -157,76 +103,11 @@ public class AuditoriaController {
     @FXML private void goProduction() { App.goTo("/fxml/produccion.fxml", "SIA Avitech — Producción"); }
     @FXML private void goReports()    { App.goTo("/fxml/reportes.fxml", "SIA Avitech — Reportes"); }
     @FXML private void goAlerts()     { App.goTo("/fxml/alertas.fxml", "SIA Avitech — Alertas"); }
-    @FXML private void goAudit()      { App.goTo("/fxml/auditoria.fxml", "SIA Avitech — Auditoría"); }
+    @FXML private void goAudit()      { /* Already here */ }
     @FXML private void goParams()     { App.goTo("/fxml/parametros.fxml", "SIA Avitech — Parámetros"); }
     @FXML private void goUsers()      { App.goTo("/fxml/usuarios.fxml", "SIA Avitech — Usuarios"); }
     @FXML private void goBackup()     { App.goTo("/fxml/respaldos.fxml", "SIA Avitech — Respaldos"); }
     @FXML private void onExit() {
         App.goTo("/fxml/login.fxml", "SIA Avitech — Inicio de sesión");
     }
-
-    /* ====== Helpers ====== */
-
-    private void seedDemo() {
-        DateTimeFormatter fmt = DateTimeFormatter.ofPattern("dd/MM/yyyy, HH:mm:ss");
-
-        master.setAll(
-                new AuditoriaDTO("María González", LocalDateTime.now().minusMinutes(8).format(fmt), "Ver",       "Alertas",
-                        "Consultó lista de alertas de stock bajo · ID: ALT-2024-000156", "ALT-2024-000156"),
-                new AuditoriaDTO("Carlos Ruiz",     LocalDateTime.now().minusMinutes(42).format(fmt), "Modificar", "Sanitario",
-                        "Actualizó estado de tratamiento SAN-2024-000451 a completado · ID: SAN-2024-000451", "SAN-2024-000451"),
-                new AuditoriaDTO("Ana Mendoza",     LocalDateTime.now().minusHours(3).format(fmt), "Crear",    "Reportes",
-                        "Generó reporte de producción por lote/semana · ID: REP-2024-000012", "REP-2024-000012"),
-                new AuditoriaDTO("Sistema",         LocalDateTime.now().minusHours(5).format(fmt), "Login",    "Login",
-                        "Inicio automático de rutina nocturna", "SYS-LOGIN")
-        );
-
-        tvAuditoria.setItems(master);
-    }
-
-    private void refreshKpis() {
-        int total = tvAuditoria.getItems() == null ? 0 : tvAuditoria.getItems().size();
-        int ok = (int) tvAuditoria.getItems().stream().filter(r -> r.accion().matches("Ver|Crear|Modificar|Login")).count();
-        int fail = total - ok; // placeholder
-        int activos = 2;       // placeholder
-
-        lblTotal.setText(String.valueOf(total));
-        lblOK.setText(String.valueOf(ok));
-        lblFail.setText(String.valueOf(fail));
-        lblActivos.setText(String.valueOf(activos));
-    }
-
-    private Callback<TableColumn<AuditoriaDTO, String>, TableCell<AuditoriaDTO, String>> makeVerFuenteCell() {
-        return col -> new TableCell<>() {
-            private final Button btn = new Button("Ver Fuente");
-            {
-                btn.getStyleClass().add("ghostBtn");
-                btn.setOnAction(e -> {
-                    AuditoriaDTO dto = getTableView().getItems().get(getIndex());
-                    onVerFuente(dto);
-                });
-            }
-            @Override
-            protected void updateItem(String item, boolean empty) {
-                super.updateItem(item, empty);
-                setGraphic(empty ? null : btn);
-                setText(null);
-            }
-        };
-    }
-
-    private void onVerFuente(AuditoriaDTO dto) {
-        // Placeholder: en real, abrir modal con detalle o navegar a la entidad
-        System.out.println("Ver fuente → " + dto.referencia());
-    }
-
-    /* ====== DTO ====== */
-    public record AuditoriaDTO(
-            String usuario,
-            String fechaHora,
-            String accion,
-            String modulo,
-            String detalle,
-            String referencia
-    ) { }
 }

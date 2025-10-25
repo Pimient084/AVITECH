@@ -1,27 +1,31 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<VBox xmlns:fx="http://javafx.com/fxml" spacing="12"
-      fx:controller="com.avitech.sia.iu.parametros.UnidadesController">
-    <children>
-        <HBox spacing="10">
+<BorderPane xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.avitech.sia.iu.parametros.UnidadesController">
+    <center>
+        <VBox spacing="12" style="-fx-padding: 16;">
             <children>
-                <TextField fx:id="txtSearch" promptText="Buscar..." />
-                <ComboBox fx:id="cbEstado" prefWidth="180"/>
-                <Pane HBox.hgrow="ALWAYS"/>
-                <Button text="+ Agregar" onAction="#onAgregar" styleClass="primary"/>
-            </children>
-        </HBox>
+                <HBox spacing="10" VBox.vgrow="NEVER" minHeight="50">
+                    <children>
+                        <TextField fx:id="txtSearch" promptText="Buscar..." />
+                        <ComboBox fx:id="cbEstado" prefWidth="180"/>
+                        <Pane HBox.hgrow="ALWAYS"/>
+                        <Button text="+ Agregar" onAction="#onAgregar" styleClass="primary"/>
+                    </children>
+                </HBox>
 
-        <TableView fx:id="tbl" prefHeight="420">
-            <columns>
-                <TableColumn text="Nombre"     fx:id="cNombre"    prefWidth="180"/>
-                <TableColumn text="Símbolo"    fx:id="cSimbolo"   prefWidth="90"/>
-                <TableColumn text="Tipo"       fx:id="cTipo"      prefWidth="120"/>
-                <TableColumn text="Descripción"fx:id="cDesc"      prefWidth="260"/>
-                <TableColumn text="Estado"     fx:id="cEstado"    prefWidth="100"/>
-                <TableColumn text="Acciones"   fx:id="cAccion"    prefWidth="120"/>
-            </columns>
-        </TableView>
-    </children>
-</VBox>
+                <TableView fx:id="tbl" VBox.vgrow="ALWAYS">
+                    <columns>
+                        <TableColumn text="Nombre"     fx:id="cNombre"    prefWidth="180"/>
+                        <TableColumn text="Símbolo"    fx:id="cSimbolo"   prefWidth="90"/>
+                        <TableColumn text="Tipo"       fx:id="cTipo"      prefWidth="120"/>
+                        <TableColumn text="Descripción" fx:id="cDesc"      prefWidth="260"/>
+                        <TableColumn text="Estado"     fx:id="cEstado"    prefWidth="100"/>
+                        <TableColumn text="Acciones"   fx:id="cAccion"    prefWidth="120"/>
+                    </columns>
+                </TableView>
+            </children>
+        </VBox>
+    </center>
+</BorderPane>

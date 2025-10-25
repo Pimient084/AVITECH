@@ -2,12 +2,11 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<?import javafx.scene.control.cell.*?>
 
 <BorderPane xmlns:fx="http://javafx.com/fxml"
             fx:controller="com.avitech.sia.iu.AuditoriaController">
 
-    <!-- ====== SIDEBAR (mismo patrón que las otras pantallas) ====== -->
+    <!-- ==== SIDEBAR (mismo patrón que los otros módulos) ==== -->
     <left>
         <ScrollPane fitToWidth="true" hbarPolicy="NEVER" prefWidth="270" styleClass="side-scroll">
             <content>
@@ -37,7 +36,6 @@
 
                         <Button text="Cerrar sesión" onAction="#onExit" styleClass="side-logout"/>
                     </children>
-
                     <padding>
                         <Insets top="16" right="16" bottom="16" left="16"/>
                     </padding>
@@ -46,7 +44,7 @@
         </ScrollPane>
     </left>
 
-    <!-- ====== TOP BAR ====== -->
+    <!-- ==== TOP BAR ==== -->
     <top>
         <HBox spacing="12" styleClass="topbar">
             <children>
@@ -61,134 +59,40 @@
         </HBox>
     </top>
 
-    <!-- ====== CONTENIDO ====== -->
+    <!-- ==== CONTENIDO ==== -->
     <center>
-        <ScrollPane fitToWidth="true" hbarPolicy="NEVER">
-            <content>
-                <VBox spacing="18" styleClass="content">
-                    <padding><Insets topRightBottomLeft="16"/></padding>
+        <VBox spacing="18" styleClass="content">
+            <padding><Insets topRightBottomLeft="16"/></padding>
+            <children>
 
+                <Label text="Auditoría del Sistema" styleClass="h2"/>
+                <Label text="Registro de todas las acciones y eventos importantes del sistema" styleClass="helper"/>
+
+                <!-- Filtros (opcional, se puede añadir después) -->
+                <HBox spacing="10">
                     <children>
-                        <Label text="Auditoría del Sistema" styleClass="h2"/>
-                        <Label text="Registro completo de actividades y trazabilidad" styleClass="helper"/>
-
-                        <!-- KPIs -->
-                        <HBox spacing="12">
-                            <children>
-                                <VBox styleClass="card" prefWidth="260">
-                                    <children>
-                                        <Label text="Total Registros" styleClass="card-title"/>
-                                        <Label fx:id="lblTotal" text="0" styleClass="card-kpi"/>
-                                    </children>
-                                </VBox>
-
-                                <VBox styleClass="card" prefWidth="260">
-                                    <children>
-                                        <Label text="Acciones Exitosas" styleClass="card-title"/>
-                                        <Label fx:id="lblOK" text="0" styleClass="card-kpi"/>
-                                    </children>
-                                </VBox>
-
-                                <VBox styleClass="card" prefWidth="260">
-                                    <children>
-                                        <Label text="Acciones Fallidas" styleClass="card-title"/>
-                                        <Label fx:id="lblFail" text="0" styleClass="card-kpi"/>
-                                    </children>
-                                </VBox>
-
-                                <VBox styleClass="card" prefWidth="260">
-                                    <children>
-                                        <Label text="Usuarios Activos" styleClass="card-title"/>
-                                        <Label fx:id="lblActivos" text="0" styleClass="card-kpi"/>
-                                    </children>
-                                </VBox>
-                            </children>
-                        </HBox>
-
-                        <!-- Filtros -->
-                        <VBox styleClass="card" spacing="10">
-                            <children>
-                                <HBox spacing="10">
-                                    <children>
-                                        <VBox spacing="6">
-                                            <Label text="Fecha Inicio" styleClass="input-label"/>
-                                            <DatePicker fx:id="dpInicio" />
-                                        </VBox>
-                                        <VBox spacing="6">
-                                            <Label text="Fecha Fin" styleClass="input-label"/>
-                                            <DatePicker fx:id="dpFin" />
-                                        </VBox>
-                                        <VBox spacing="6">
-                                            <Label text="Usuario" styleClass="input-label"/>
-                                            <ComboBox fx:id="cboUsuario" prefWidth="180"/>
-                                        </VBox>
-                                        <VBox spacing="6">
-                                            <Label text="Módulo" styleClass="input-label"/>
-                                            <ComboBox fx:id="cboModulo" prefWidth="180"/>
-                                        </VBox>
-                                        <VBox spacing="6">
-                                            <Label text="Acción" styleClass="input-label"/>
-                                            <ComboBox fx:id="cboAccion" prefWidth="180"/>
-                                        </VBox>
-                                        <VBox spacing="6" VBox.vgrow="NEVER">
-                                            <Label text="Buscar" styleClass="input-label"/>
-                                            <TextField fx:id="txtBuscar" promptText="Detalle, usuario o ID..." prefWidth="260"/>
-                                        </VBox>
-
-                                        <Pane HBox.hgrow="ALWAYS"/>
-
-                                        <VBox spacing="6" alignment="BOTTOM_CENTER">
-                                            <Label text="" />
-                                            <HBox spacing="8">
-                                                <Button text="Aplicar"  onAction="#onFiltrar" styleClass="primary"/>
-                                                <Button text="Limpiar"  onAction="#onLimpiar" styleClass="secondary"/>
-                                                <Button text="Exportar CSV" onAction="#onExportCsv" styleClass="ghostBtn"/>
-                                            </HBox>
-                                        </VBox>
-                                    </children>
-                                </HBox>
-                            </children>
-                        </VBox>
-
-                        <!-- Registro de Auditoría -->
-                        <VBox styleClass="card" spacing="10">
-                            <children>
-                                <Label text="Registro de Auditoría" styleClass="card-title"/>
-                                <TableView fx:id="tvAuditoria" prefHeight="360">
-                                    <columns>
-                                        <TableColumn fx:id="colUsuario"  text="Usuario"    prefWidth="160"/>
-                                        <TableColumn fx:id="colFecha"    text="Fecha/Hora" prefWidth="160"/>
-                                        <TableColumn fx:id="colAccion"   text="Acción"     prefWidth="110"/>
-                                        <TableColumn fx:id="colModulo"   text="Módulo"     prefWidth="130"/>
-                                        <TableColumn fx:id="colDetalle"  text="Detalle"    prefWidth="520"/>
-                                        <TableColumn fx:id="colVer"      text="Ver Fuente" prefWidth="110"/>
-                                    </columns>
-                                </TableView>
-                            </children>
-                        </VBox>
-
-                        <!-- Dos tarjetas de resumen -->
-                        <HBox spacing="12">
-                            <children>
-                                <VBox styleClass="card" prefWidth="640" spacing="10">
-                                    <children>
-                                        <Label text="Actividad por Módulo" styleClass="card-title"/>
-                                        <ListView fx:id="lvActividadModulo" prefHeight="240"/>
-                                    </children>
-                                </VBox>
-
-                                <VBox styleClass="card" prefWidth="420" spacing="10">
-                                    <children>
-                                        <Label text="Actividad por Usuario" styleClass="card-title"/>
-                                        <ListView fx:id="lvActividadUsuario" prefHeight="240"/>
-                                    </children>
-                                </VBox>
-                            </children>
-                        </HBox>
+                        <TextField fx:id="tfSearch" promptText="Buscar por acción, módulo, detalle..." prefWidth="320" styleClass="input"/>
+                        <ComboBox fx:id="cbUsuario" promptText="Filtrar por usuario" prefWidth="160"/>
+                        <DatePicker fx:id="dpFechaInicio" promptText="Fecha Inicio" prefWidth="140"/>
+                        <DatePicker fx:id="dpFechaFin" promptText="Fecha Fin" prefWidth="140"/>
+                        <Pane HBox.hgrow="ALWAYS"/>
+                        <Button text="Refrescar" onAction="#loadAuditData" styleClass="secondary"/>
                     </children>
-                </VBox>
-            </content>
-        </ScrollPane>
-    </center>
+                </HBox>
 
+                <!-- Tabla de Auditoría -->
+                <TableView fx:id="tblAuditoria" VBox.vgrow="ALWAYS">
+                    <columns>
+                        <TableColumn fx:id="colFecha"      text="Fecha"         prefWidth="180"/>
+                        <TableColumn fx:id="colUsuario"    text="Usuario"       prefWidth="120"/>
+                        <TableColumn fx:id="colAccion"     text="Acción"        prefWidth="150"/>
+                        <TableColumn fx:id="colModulo"     text="Módulo"        prefWidth="120"/>
+                        <TableColumn fx:id="colDetalle"    text="Detalle"       prefWidth="300"/>
+                        <TableColumn fx:id="colReferencia" text="Referencia"    prefWidth="200"/>
+                    </columns>
+                </TableView>
+
+            </children>
+        </VBox>
+    </center>
 </BorderPane>

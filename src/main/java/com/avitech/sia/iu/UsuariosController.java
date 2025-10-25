@@ -29,6 +29,7 @@ public class UsuariosController {
 
     // DAOs
     private final UsuarioDAO usuarioDAO = new UsuarioDAO();
+    private final int ACTOR_ID = 1; // TODO: Replace with actual logged-in user ID
 
     // Topbar
     @FXML private Label lblSystemStatus;
@@ -54,7 +55,7 @@ public class UsuariosController {
     @FXML private TableColumn<UserRow, String> colRol;
     @FXML private TableColumn<UserRow, String> colEstado;
     @FXML private TableColumn<UserRow, String> colUltimoAcc;
-    @FXML private TableColumn<UserRow, HBox>   colAcciones;
+    @FXML private TableColumn<UserRow, HBox>   colAcciones; // Changed from String to HBox
 
     // Datos
     private final ObservableList<UserRow> masterData = FXCollections.observableArrayList();
@@ -170,7 +171,7 @@ public class UsuariosController {
 
             UsuarioDAO.Usuario newUser = controller.getResult();
             if (newUser != null) {
-                usuarioDAO.insert(newUser);
+                usuarioDAO.insert(newUser, ACTOR_ID);
                 loadUserData();
                 applyFilter();
             }
@@ -203,11 +204,17 @@ public class UsuariosController {
 
             dialogStage.showAndWait();
 
-            UsuarioDAO.Usuario updatedUser = controller.getResult();
-            if (updatedUser != null) {
-                usuarioDAO.update(updatedUser);
+            if (controller.isDeleted()) { // Check if the user was deleted from the modal
+                usuarioDAO.delete(userToEdit.id(), ACTOR_ID);
                 loadUserData();
                 applyFilter();
+            } else {
+                UsuarioDAO.Usuario updatedUser = controller.getResult();
+                if (updatedUser != null) {
+                    usuarioDAO.update(updatedUser, ACTOR_ID);
+                    loadUserData();
+                    applyFilter();
+                }
             }
         } catch (IOException e) {
             showError("Error al abrir el diálogo de edición", e);
@@ -226,7 +233,7 @@ public class UsuariosController {
         result.ifPresent(newPassword -> {
             try {
                 // In a real app, hash this password before sending to DAO
-                usuarioDAO.updatePassword(row.id(), newPassword);
+                usuarioDAO.updatePassword(row.id(), newPassword, ACTOR_ID);
                 new Alert(Alert.AlertType.INFORMATION, "Contraseña actualizada con éxito.").showAndWait();
             } catch (Exception e) {
                 showError("Error al cambiar contraseña", e);
@@ -243,7 +250,7 @@ public class UsuariosController {
         Optional<ButtonType> result = alert.showAndWait();
         if (result.isPresent() && result.get() == ButtonType.OK) {
             try {
-                usuarioDAO.delete(row.id());
+                usuarioDAO.delete(row.id(), ACTOR_ID);
                 loadUserData();
                 applyFilter();
             } catch (Exception e) {
@@ -266,7 +273,7 @@ public class UsuariosController {
     @FXML private void goAlerts()     { App.goTo("/fxml/alertas.fxml", "SIA Avitech — Alertas"); }
     @FXML private void goAudit()      { App.goTo("/fxml/auditoria.fxml", "SIA Avitech — Auditoría"); }
     @FXML private void goParams()     { App.goTo("/fxml/parametros.fxml", "SIA Avitech — Parámetros"); }
-    @FXML private void goUsers()      { /* Already here */ }
+    @FXML private void goUsers()      { App.goTo("/fxml/usuarios.fxml", "SIA Avitech — Usuarios"); }
     @FXML private void goBackup()     { App.goTo("/fxml/respaldos.fxml", "SIA Avitech — Respaldos"); }
     @FXML private void onExit() {
         App.goTo("/fxml/login.fxml", "SIA Avitech — Inicio de sesión");

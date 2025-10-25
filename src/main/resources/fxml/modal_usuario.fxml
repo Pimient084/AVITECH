@@ -35,6 +35,8 @@
     </GridPane>
 
     <HBox spacing="10" alignment="CENTER_RIGHT">
+        <Button fx:id="btnEliminar" text="Eliminar" onAction="#onDelete" styleClass="danger" visible="false" managed="false"/>
+        <Pane HBox.hgrow="ALWAYS"/>
         <Button text="Cancelar" onAction="#onCancel" styleClass="secondary"/>
         <Button text="Guardar" onAction="#onSave" styleClass="primary"/>
     </HBox>
