@@ -29,7 +29,8 @@ public class App extends Application {
         scene.getStylesheets().add(App.class.getResource("/css/theme.css").toExternalForm());
 
         stage.setTitle("SIA Avitech — Inicio de sesión");
-        stage.setMaximized(true);
+        stage.setWidth(1280); // Set default width
+        stage.setHeight(800); // Set default height
         stage.setScene(scene);
         stage.show();
     }
@@ -43,8 +44,6 @@ public class App extends Application {
     public static void goTo(String fxmlPath, String title) {
         try {
             boolean wasMaximized = primaryStage.isMaximized();
-            double width = primaryStage.getWidth();
-            double height = primaryStage.getHeight();
 
             FXMLLoader loader = new FXMLLoader(App.class.getResource(fxmlPath));
             Scene scene = new Scene(loader.load());
@@ -55,12 +54,8 @@ public class App extends Application {
             if (wasMaximized) {
                 primaryStage.setMaximized(true);
             } else {
-                if (!Double.isNaN(width) && width > 0) {
-                    primaryStage.setWidth(width);
-                }
-                if (!Double.isNaN(height) && height > 0) {
-                    primaryStage.setHeight(height);
-                }
+                primaryStage.setWidth(1280); // Enforce standard width
+                primaryStage.setHeight(800); // Enforce standard height
             }
             primaryStage.show();
         } catch (IOException e) {
