@@ -9,7 +9,7 @@ public class BackupUtil {
 
     private static final String DB_NAME = "avicola2"; // Nombre de la base de datos actualizado
     private static final String DB_USER = "root";
-    private static final String DB_PASS = "123456";
+    private static final String DB_PASS = "ca123";
     private static final String BACKUP_DIR = "C:/MySQLBackups";
 
     public static boolean createBackup() {
