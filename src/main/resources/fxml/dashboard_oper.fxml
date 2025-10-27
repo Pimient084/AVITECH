@@ -38,7 +38,7 @@
                         <Region VBox.vgrow="ALWAYS"/>
 
                         <Label text="Usuario del sistema" styleClass="sidebar-subtitle"/>
-                        <Label fx:id="lblUserInfo" text="Administrador" styleClass="sidebar-user"/>
+                        <Label fx:id="lblUserInfo" text="Operador" styleClass="sidebar-user"/>
 
                         <Button text="Cerrar sesión" onAction="#onExit" styleClass="side-logout"/>
                     </children>
@@ -59,7 +59,7 @@
                 <Pane HBox.hgrow="ALWAYS"/>
                 <Label fx:id="lblSystemStatus" text="Sistema Offline – MySQL Local" styleClass="topbar-status"/>
                 <Separator orientation="VERTICAL"/>
-                <Label fx:id="lblHeader" text="Administrador"/>
+                <Label fx:id="lblHeader" text="Operador"/>
                 <Button text="↩ Salir" onAction="#onExit" styleClass="ghostBtn"/>
             </children>
             <padding><Insets topRightBottomLeft="10"/></padding>
@@ -77,8 +77,8 @@
                 <VBox fx:id="contentRoot" spacing="18" styleClass="content"
                       fillWidth="true" maxWidth="Infinity">
                     <children>
-                        <Label text="Tablero Principal" styleClass="h2"/>
-                        <Label text="Resumen general del sistema avícola" styleClass="helper"/>
+                        <Label text="Tablero Principal (Operador)" styleClass="h2"/>
+                        <Label text="Resumen general del sistema avícola para operadores" styleClass="helper"/>
 
                         <!-- KPIs -->
                         <HBox spacing="12">
@@ -120,7 +120,6 @@
                         <!-- Gráfico + alertas recientes -->
                         <HBox spacing="12">
                             <children>
-                                <!-- HAZ QUE EL GRÁFICO CREZCA Y PUEDA REDUCIRSE -->
                                 <VBox styleClass="card" minWidth="0" HBox.hgrow="ALWAYS">
                                     <children>
                                         <Label text="Producción Semanal" styleClass="card-title"/>
@@ -134,7 +133,6 @@
                                     </children>
                                 </VBox>
 
-                                <!-- Panel derecho con ancho fijo mínimo y flexible -->
                                 <VBox styleClass="card" minWidth="280" prefWidth="360" HBox.hgrow="NEVER">
                                     <children>
                                         <Label text="Alertas Recientes" styleClass="card-title"/>
@@ -151,11 +149,10 @@
                                 <Label text="Producción por Galpón" styleClass="card-title"/>
                                 <Label text="Rendimiento actual de cada instalación" styleClass="helper"/>
 
-                                <!-- HAZ EL GRID RESPONSIVE: COLUMNA 2 CRECE -->
                                 <GridPane hgap="10" vgap="10">
                                     <columnConstraints>
                                         <ColumnConstraints minWidth="80"  prefWidth="90"/>
-                                        <ColumnConstraints hgrow="ALWAYS" minWidth="100"/> <!-- la barra crece -->
+                                        <ColumnConstraints hgrow="ALWAYS" minWidth="100"/>
                                         <ColumnConstraints minWidth="110" prefWidth="120"/>
                                     </columnConstraints>
 

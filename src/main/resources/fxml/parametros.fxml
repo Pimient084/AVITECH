@@ -4,7 +4,8 @@
 <?import javafx.scene.layout.*?>
 
 <BorderPane xmlns:fx="http://javafx.com/fxml"
-            fx:controller="com.avitech.sia.iu.parametros.ParametrosController">
+            fx:controller="com.avitech.sia.iu.parametros.ParametrosController"
+            prefWidth="1280" prefHeight="800">
 
     <!-- SIDEBAR (igual a las otras pantallas) -->
     <left>

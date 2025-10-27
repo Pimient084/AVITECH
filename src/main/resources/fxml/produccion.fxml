@@ -10,7 +10,8 @@
   Controller se creará después: com.avitech.sia.iu.ProduccionController
 -->
 <BorderPane xmlns:fx="http://javafx.com/fxml"
-            fx:controller="com.avitech.sia.iu.ProduccionController">
+            fx:controller="com.avitech.sia.iu.ProduccionController"
+            prefWidth="1280" prefHeight="800">
 
     <!-- ========== SIDEBAR (mismo menú principal) ========== -->
     <left>
@@ -33,7 +34,7 @@
                         <ToggleButton text="Auditoría"     toggleGroup="$sideGroup" onAction="#goAudit"      styleClass="side-btn"/>
                         <ToggleButton text="Parámetros"    toggleGroup="$sideGroup" onAction="#goParams"     styleClass="side-btn"/>
                         <ToggleButton text="Usuarios"      toggleGroup="$sideGroup" onAction="#goUsers"      styleClass="side-btn"/>
-                        <ToggleButton text="Respaldos"     toggleGroup="$sideGroup" onAction="#goBackup"     styleClass="side-btn"/>
+                        <ToggleButton text="Respaldos"   toggleGroup="$sideGroup" onAction="#goBackup"     styleClass="side-btn"/>
 
                         <Region VBox.vgrow="ALWAYS"/>
                         <Label text="Usuario del sistema" styleClass="sidebar-subtitle"/>

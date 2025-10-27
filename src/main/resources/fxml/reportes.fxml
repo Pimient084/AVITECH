@@ -5,7 +5,8 @@
 <?import javafx.scene.control.cell.*?>
 
 <BorderPane xmlns:fx="http://javafx.com/fxml"
-            fx:controller="com.avitech.sia.iu.ReportesController">
+            fx:controller="com.avitech.sia.iu.ReportesController"
+            prefWidth="1280" prefHeight="800">
 
     <!-- ============== SIDEBAR (scroll propio) ============== -->
     <left>

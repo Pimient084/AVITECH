@@ -5,7 +5,8 @@
 <?import javafx.scene.text.Text?>
 
 <BorderPane xmlns:fx="http://javafx.com/fxml"
-            fx:controller="com.avitech.sia.iu.SuministrosController">
+            fx:controller="com.avitech.sia.iu.SuministrosController"
+            prefWidth="1280" prefHeight="800">
 
     <!-- ========== SIDEBAR ========== -->
     <left>

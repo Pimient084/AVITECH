@@ -1,15 +1,18 @@
 package com.avitech.sia.iu;
 
 import com.avitech.sia.App;
+import com.avitech.sia.db.UsuarioDAO;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 
+import java.util.Optional;
+
 public class LoginController {
 
-    // --- Campos FXML ---
+    // --- Campos FXML -- -
     @FXML private TextField txtUser;
 
     @FXML private PasswordField txtPass;
@@ -20,7 +23,9 @@ public class LoginController {
 
     @FXML private Label lblError;
 
-    // --- Inicialización ---
+    private final UsuarioDAO usuarioDAO = new UsuarioDAO();
+
+    // --- Inicialización -- -
     @FXML
     private void initialize() {
         // Sincroniza el texto entre los dos campos
@@ -79,27 +84,41 @@ public class LoginController {
             return;
         }
 
-        // DEMO: credenciales por defecto (puedes reemplazar por consulta a BD)
-        if (user.equals("admin") && pass.equals("admin123")) {
-            // Navega al dashboard de ADMIN
-            App.goTo("/fxml/dashboard_admin.fxml", "SIA Avitech — ADMIN");
-            return;
-        }
-        if (user.equals("supervisor") && pass.equals("super123")) {
-            // Si ya tienes el FXML del supervisor, cámbialo aquí:
-            // App.goTo("/fxml/dashboard_supervisor.fxml", "SIA Avitech — SUPERVISOR");
-            App.goTo("/fxml/dashboard_oper.fxml", "SIA Avitech — SUPERVISOR (demo)");
-            return;
-        }
-        if (user.equals("operador") && pass.equals("oper123")) {
-            // Si ya tienes el FXML del operador, cámbialo aquí:
-            // App.goTo("/fxml/dashboard_oper.fxml", "SIA Avitech — OPERADOR");
-            App.goTo("/fxml/dashboard_super.fxml", "SIA Avitech — OPERADOR (demo)");
-            return;
-        }
+        try {
+            Optional<UsuarioDAO.Usuario> usuarioOpt = usuarioDAO.findByUsuario(user);
 
-        showError("Usuario o contraseña incorrectos.");
+            if (usuarioOpt.isPresent()) {
+                UsuarioDAO.Usuario usuario = usuarioOpt.get();
+                if (pass.equals(usuario.password())) {
+                    // Credenciales correctas, redirigir según el rol
+                    switch (usuario.rol()) {
+                        case "ADMIN":
+                            App.goTo("/fxml/dashboard_admin.fxml", "SIA Avitech — ADMIN");
+                            break;
+                        case "SUPERVISOR":
+                            App.goTo("/fxml/dashboard_super.fxml", "SIA Avitech — SUPERVISOR");
+                            break;
+                        case "OPERADOR":
+                            App.goTo("/fxml/dashboard_oper.fxml", "SIA Avitech — OPERADOR");
+                            break;
+                        default:
+                            showError("Rol de usuario no reconocido.");
+                            break;
+                    }
+                } else {
+                    // Contraseña incorrecta
+                    showError("Usuario o contraseña incorrectos.");
+                }
+            } else {
+                // Usuario no encontrado
+                showError("Usuario o contraseña incorrectos.");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            showError("Error al conectar con la base de datos.");
+        }
     }
+
 
     // --- Mensajes de error ---
     private void showError(String msg) {

@@ -6,7 +6,8 @@
 <?import javafx.scene.control.cell.ProgressBarTableCell?>
 
 <BorderPane xmlns:fx="http://javafx.com/fxml"
-            fx:controller="com.avitech.sia.iu.SanidadController">
+            fx:controller="com.avitech.sia.iu.SanidadController"
+            prefWidth="1280" prefHeight="800">
 
     <!-- SIDEBAR (igual al dashboard) -->
     <left>
