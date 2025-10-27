@@ -16,7 +16,7 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Map;
 
-public class DashboardController {
+public class DashboardSupervisorController {
 
     // DAOs
     protected final LoteDAO loteDAO = new LoteDAO();
@@ -58,8 +58,8 @@ public class DashboardController {
     @FXML
     protected void initialize() {
         lblSystemStatus.setText("Sistema Online – MySQL Local");
-        lblHeader.setText("Administrador");
-        lblUserInfo.setText("Administrador");
+        lblHeader.setText("Supervisor");
+        lblUserInfo.setText("Supervisor");
 
         loadDashboardData();
     }
@@ -141,14 +141,14 @@ public class DashboardController {
 
     /* ======== NAV (stubs) ======== */
     @FXML protected void goDashboard()  { /* Already here */ }
-    @FXML protected void goSupplies()   { App.goTo("/fxml/suministros.fxml", "SIA Avitech — Suministros"); }
-    @FXML protected void goHealth()     { App.goTo("/fxml/sanidad.fxml", "SIA Avitech — Sanidad"); }
-    @FXML protected void goProduction() { App.goTo("/fxml/produccion.fxml", "SIA Avitech — Producción"); }
-    @FXML protected void goReports()    { App.goTo("/fxml/reportes.fxml", "SIA Avitech — Reportes"); }
-    @FXML protected void goAlerts()     { App.goTo("/fxml/alertas.fxml", "SIA Avitech — Alertas"); }
-    @FXML protected void goAudit()      { App.goTo("/fxml/auditoria.fxml", "SIA Avitech — Auditoría"); }
-    @FXML protected void goParams()     { App.goTo("/fxml/parametros.fxml", "SIA Avitech — Parámetros"); }
-    @FXML protected void goUsers()      { App.goTo("/fxml/usuarios.fxml", "SIA Avitech — Usuarios"); }
-    @FXML protected void goBackup()     { App.goTo("/fxml/respaldos.fxml", "SIA Avitech — Respaldos"); }
+    @FXML protected void goSupplies()   { App.goTo("/fxml/superv/suministros_super.fxml", "SIA Avitech — Suministros"); }
+    @FXML protected void goHealth()     { App.goTo("/fxml/superv/sanidad_super.fxml", "SIA Avitech — Sanidad"); }
+    @FXML protected void goProduction() { App.goTo("/fxml/superv/produccion_super.fxml", "SIA Avitech — Producción"); }
+    @FXML protected void goReports()    { App.goTo("/fxml/superv/reportes_super.fxml", "SIA Avitech — Reportes"); }
+    @FXML protected void goAlerts()     { App.goTo("/fxml/superv/alertas_super.fxml", "SIA Avitech — Alertas"); }
+    @FXML protected void goAudit()      { App.goTo("/fxml/superv/auditoria_super.fxml", "SIA Avitech — Auditoría"); }
+    @FXML protected void goParams()     { App.goTo("/fxml/superv/parametros_super.fxml", "SIA Avitech — Parámetros"); }
+    @FXML protected void goUsers()      { App.goTo("/fxml/superv/usuarios_super.fxml", "SIA Avitech — Usuarios"); }
+    @FXML protected void goBackup()     { App.goTo("/fxml/superv/respaldos_super.fxml", "SIA Avitech — Respaldos"); }
 
 }

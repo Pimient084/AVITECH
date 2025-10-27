@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.Text?>
+<BorderPane xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.avitech.sia.iu.superv.UsuariosSupervisorController"
+            prefWidth="1280" prefHeight="800">
+
+    <!-- ==== SIDEBAR (mismo patrón que los otros módulos) ==== -->
+    <left>
+        <ScrollPane fitToWidth="true" fitToHeight="true" hbarPolicy="NEVER" prefWidth="270" styleClass="side-scroll">
+            <content>
+                <VBox spacing="10" styleClass="sidebar" prefWidth="270" VBox.vgrow="ALWAYS"> <!-- Added VBox.vgrow="ALWAYS" -->
+                    <children>
+                        <Label text="Menú Principal" styleClass="sidebar-title"/>
+
+                        <fx:define>
+                            <ToggleGroup fx:id="sideGroup"/>
+                        </fx:define>
+
+                        <ToggleButton text="Tablero"       toggleGroup="$sideGroup" onAction="#goDashboard"  styleClass="side-btn"/>
+                        <ToggleButton text="Suministros"   toggleGroup="$sideGroup" onAction="#goSupplies"   styleClass="side-btn"/>
+                        <ToggleButton text="Sanidad"       toggleGroup="$sideGroup" onAction="#goHealth"     styleClass="side-btn"/>
+                        <ToggleButton text="Producción"    toggleGroup="$sideGroup" onAction="#goProduction" styleClass="side-btn"/>
+                        <ToggleButton text="Alertas"       toggleGroup="$sideGroup" onAction="#goAlerts"     styleClass="side-btn"/>
+
+                        <Region VBox.vgrow="ALWAYS"/>
+
+                        <Label text="Usuario del sistema" styleClass="sidebar-subtitle"/>
+                        <Label fx:id="lblUserInfo" text="Supervisor" styleClass="sidebar-user"/>
+
+                        <Button text="Cerrar sesión" onAction="#onExit" styleClass="side-logout"/>
+                    </children>
+                    <padding>
+                        <Insets top="16" right="16" bottom="16" left="16"/>
+                    </padding>
+                </VBox>
+            </content>
+        </ScrollPane>
+    </left>
+
+    <!-- ==== TOP BAR ==== -->
+    <top>
+        <HBox spacing="12" styleClass="topbar">
+            <children>
+                <Label text="AVITECH — SIA" styleClass="topbar-brand"/>
+                <Pane HBox.hgrow="ALWAYS"/>
+                <Label fx:id="lblSystemStatus" text="Sistema Offline – MySQL Local" styleClass="topbar-status"/>
+                <Separator orientation="VERTICAL"/>
+                <Label fx:id="lblHeader" text="Supervisor"/>
+                <Button text="↩ Salir" onAction="#onExit" styleClass="ghostBtn"/>
+            </children>
+            <padding><Insets topRightBottomLeft="10"/></padding>
+        </HBox>
+    </top>
+
+    <!-- ==== CONTENIDO ==== -->
+    <center>
+        <ScrollPane fitToWidth="true" hbarPolicy="NEVER">
+            <content>
+                <VBox spacing="18" styleClass="content">
+                    <padding><Insets topRightBottomLeft="16"/></padding>
+                    <children>
+
+                        <Label text="Gestión de Usuarios" styleClass="h2"/>
+                        <Label text="Administración completa de usuarios, roles y permisos del sistema" styleClass="helper"/>
+
+                        <!-- Filtros y CTA -->
+                        <HBox spacing="10">
+                            <children>
+                                <TextField fx:id="tfSearch" promptText="Buscar por nombre, usuario o email…" prefWidth="320" styleClass="input"/>
+                                <ComboBox fx:id="cbRol" prefWidth="160"/>
+                                <ComboBox fx:id="cbEstado" prefWidth="160"/>
+                                <Pane HBox.hgrow="ALWAYS"/>
+                                <Button fx:id="btnNuevo" text="+ Nuevo Usuario" styleClass="primary"/>
+                            </children>
+                        </HBox>
+
+                        <!-- KPIs -->
+                        <HBox spacing="12">
+                            <children>
+                                <VBox styleClass="card" prefWidth="250">
+                                    <children>
+                                        <Label text="Total Usuarios" styleClass="card-title"/>
+                                        <Label fx:id="lblTotal" text="0" styleClass="card-kpi"/>
+                                    </children>
+                                </VBox>
+
+                                <VBox styleClass="card" prefWidth="250">
+                                    <children>
+                                        <Label text="Usuarios Activos" styleClass="card-title"/>
+                                        <Label fx:id="lblActivos" text="0" styleClass="card-kpi"/>
+                                    </children>
+                                </VBox>
+
+                                <VBox styleClass="card" prefWidth="250">
+                                    <children>
+                                        <Label text="Administradores" styleClass="card-title"/>
+                                        <Label fx:id="lblAdmins" text="0" styleClass="card-kpi"/>
+                                    </children>
+                                </VBox>
+
+                                <VBox styleClass="card" prefWidth="250">
+                                    <children>
+                                        <Label text="Conectados Hoy" styleClass="card-title"/>
+                                        <Label fx:id="lblConHoy" text="0" styleClass="card-kpi"/>
+                                    </children>
+                                </VBox>
+                            </children>
+                        </HBox>
+
+                        <!-- Tabla de usuarios -->
+                        <VBox spacing="8" styleClass="card">
+                            <children>
+                                <HBox spacing="8" alignment="CENTER_LEFT">
+                                    <children>
+                                        <Label text="Lista de Usuarios" styleClass="card-title"/>
+                                    </children>
+                                </HBox>
+
+                                <TableView fx:id="tblUsuarios" prefHeight="520">
+                                    <columns>
+                                        <TableColumn fx:id="colNombre"      text="Nombre"        prefWidth="260"/>
+                                        <TableColumn fx:id="colUsuario"     text="Usuario"       prefWidth="200"/>
+                                        <TableColumn fx:id="colRol"         text="Rol"           prefWidth="140"/>
+                                        <TableColumn fx:id="colEstado"      text="Estado"        prefWidth="120"/>
+                                        <TableColumn fx:id="colUltimoAcc"   text="Último Acceso" prefWidth="200"/>
+                                        <TableColumn fx:id="colAcciones"    text="Acciones"      prefWidth="160"/>
+                                    </columns>
+                                </TableView>
+                            </children>
+                        </VBox>
+
+                        <Label text="Sistema offline (LAN). Autenticación local. Contraseñas protegidas." styleClass="helper"/>
+
+                    </children>
+                </VBox>
+            </content>
+        </ScrollPane>
+    </center>
+</BorderPane>

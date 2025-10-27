@@ -1,0 +1,183 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.Text?>
+
+<BorderPane xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.avitech.sia.iu.superv.SuministrosSupervisorController"
+            prefWidth="1280" prefHeight="800">
+
+    <!-- ========== SIDEBAR ========== -->
+    <left>
+        <ScrollPane fitToWidth="true" fitToHeight="true" hbarPolicy="NEVER" prefWidth="270" styleClass="side-scroll">
+            <content>
+                <VBox spacing="10" styleClass="sidebar" prefWidth="270" VBox.vgrow="ALWAYS">
+                    <children>
+                        <Label text="Menú Principal" styleClass="sidebar-title"/>
+                        <fx:define><ToggleGroup fx:id="sideGroup"/></fx:define>
+
+                        <ToggleButton text="Tablero"       toggleGroup="$sideGroup" onAction="#goDashboard"  styleClass="side-btn"/>
+                        <ToggleButton text="Suministros" toggleGroup="$sideGroup" onAction="#goSupplies"   styleClass="side-btn active" selected="true"/>
+                        <ToggleButton text="Sanidad"     toggleGroup="$sideGroup" onAction="#goHealth"     styleClass="side-btn"/>
+                        <ToggleButton text="Producción"  toggleGroup="$sideGroup" onAction="#goProduction" styleClass="side-btn"/>
+                        <ToggleButton text="Alertas"     toggleGroup="$sideGroup" onAction="#goAlerts"     styleClass="side-btn"/>
+
+                        <Region VBox.vgrow="ALWAYS"/>
+                        <Label text="Usuario del sistema" styleClass="sidebar-subtitle"/>
+                        <Label fx:id="lblUserInfo" text="Supervisor" styleClass="sidebar-user"/>
+                        <Button text="Cerrar sesión" onAction="#onExit" styleClass="side-logout"/>
+                    </children>
+                    <padding>
+                        <Insets top="16" right="16" bottom="16" left="16"/>
+                    </padding>
+                </VBox>
+            </content>
+        </ScrollPane>
+    </left>
+
+    <!-- ========== TOP BAR ========== -->
+    <top>
+        <HBox spacing="12" styleClass="topbar">
+            <children>
+                <Label text="AVITECH — SIA" styleClass="topbar-brand"/>
+                <Pane HBox.hgrow="ALWAYS"/>
+                <Label fx:id="lblSystemStatus" text="Sistema Offline – MySQL Local" styleClass="topbar-status"/>
+                <Separator orientation="VERTICAL"/>
+                <Label fx:id="lblHeader" text="Supervisor"/>
+                <Button text="↩ Salir" onAction="#onExit" styleClass="ghostBtn"/>
+            </children>
+            <padding><Insets topRightBottomLeft="10"/></padding>
+        </HBox>
+    </top>
+
+    <!-- ========== CONTENT ========== -->
+    <center>
+        <ScrollPane fitToWidth="true" hbarPolicy="NEVER">
+            <content>
+                <VBox spacing="18" styleClass="content">
+                    <children>
+                        <Label text="Suministros y Alimentos" styleClass="h2"/>
+                        <Label text="Gestión de stock, entradas y salidas de productos" styleClass="helper"/>
+
+                        <!-- KPIs -->
+                        <HBox spacing="12">
+                            <children>
+                                <VBox styleClass="card" prefWidth="280">
+                                    <children>
+                                        <Label text="Movimientos Hoy" styleClass="card-title"/>
+                                        <Label fx:id="kpiMovHoy" text="0" styleClass="card-kpi"/>
+                                        <Label text="+0" styleClass="card-delta"/>
+                                    </children>
+                                </VBox>
+                                <VBox styleClass="card" prefWidth="280">
+                                    <children>
+                                        <Label text="Productos Activos" styleClass="card-title"/>
+                                        <Label fx:id="kpiActivos" text="0" styleClass="card-kpi"/>
+                                        <Label text="+0" styleClass="card-delta"/>
+                                    </children>
+                                </VBox>
+                                <VBox styleClass="card" prefWidth="280">
+                                    <children>
+                                        <Label text="Stock Bajo" styleClass="card-title"/>
+                                        <Label fx:id="kpiStockBajo" text="0" styleClass="card-kpi"/>
+                                        <Label text="+0" styleClass="card-delta bad"/>
+                                    </children>
+                                </VBox>
+                                <VBox styleClass="card" prefWidth="280">
+                                    <children>
+                                        <Label text="Valor Total Stock" styleClass="card-title"/>
+                                        <Label fx:id="kpiValor" text="+$0" styleClass="card-kpi"/>
+                                        <Label text="+$0" styleClass="card-delta"/>
+                                    </children>
+                                </VBox>
+                            </children>
+                        </HBox>
+
+                        <!-- Acciones principales -->
+                        <HBox spacing="10">
+                            <children>
+                                <Button fx:id="btnEntrada" text="➕ Entrada" styleClass="primary" onAction="#onEntrada"/>
+                                <Button fx:id="btnSalida" text="➖ Salida"  styleClass="secondary" onAction="#onSalida"/>
+                                <Button text="👁 Ver Stock" styleClass="secondary" onAction="#onVerStock"/>
+                            </children>
+                        </HBox>
+
+                        <!-- Filtros -->
+                        <VBox styleClass="card">
+                            <children>
+                                <Label text="Filtros y Búsqueda" styleClass="card-title"/>
+                                <GridPane hgap="10" vgap="10">
+                                    <columnConstraints>
+                                        <ColumnConstraints percentWidth="30"/>
+                                        <ColumnConstraints percentWidth="17.5"/>
+                                        <ColumnConstraints percentWidth="17.5"/>
+                                        <ColumnConstraints percentWidth="17.5"/>
+                                        <ColumnConstraints percentWidth="17.5"/>
+                                    </columnConstraints>
+
+                                    <Label text="Buscar" GridPane.columnIndex="0"/>
+                                    <TextField fx:id="txtSearch" promptText="Ítem, responsable o proveedor…" GridPane.columnIndex="0"/>
+
+                                    <Label text="Tipo de Movimiento" GridPane.columnIndex="1"/>
+                                    <ComboBox fx:id="cbTipo" GridPane.columnIndex="1"/>
+
+                                    <Label text="Responsable" GridPane.columnIndex="2"/>
+                                    <ComboBox fx:id="cbResp" GridPane.columnIndex="2"/>
+
+                                    <Label text="Fecha Desde" GridPane.columnIndex="3"/>
+                                    <DatePicker fx:id="dpDesde" GridPane.columnIndex="3"/>
+
+                                    <Label text="Fecha Hasta" GridPane.columnIndex="4"/>
+                                    <DatePicker fx:id="dpHasta" GridPane.columnIndex="4"/>
+                                </GridPane>
+
+                                <HBox spacing="10" style="-fx-padding: 8 0 0 0;">
+                                    <children>
+                                        <Button text="Mover Stock" onAction="#onMoverStock" styleClass="ghostBtn"/>
+                                        <Pane HBox.hgrow="ALWAYS"/>
+                                        <Label text="Mostrando" styleClass="helper"/>
+                                        <Label fx:id="lblMostrando" text="0 ítems" styleClass="helper"/>
+                                    </children>
+                                </HBox>
+                            </children>
+                        </VBox>
+
+                        <!-- Tabla de movimientos -->
+                        <VBox styleClass="card">
+                            <children>
+                                <Label text="Historial de Movimientos de Stock" styleClass="card-title"/>
+                                <Label text="Registro completo de entradas y salidas" styleClass="helper"/>
+                                <TableView fx:id="tblMovs" prefHeight="380">
+                                    <columns>
+                                        <TableColumn fx:id="colFecha" text="Fecha/Hora" prefWidth="145"/>
+                                        <TableColumn fx:id="colItem"  text="Ítem" prefWidth="200"/>
+                                        <TableColumn fx:id="colCant"  text="Cantidad" prefWidth="90"/>
+                                        <TableColumn fx:id="colUnidad" text="Unidad" prefWidth="70"/>
+                                        <TableColumn fx:id="colTipo" text="Tipo (E/S)" prefWidth="90"/>
+                                        <TableColumn fx:id="colResp" text="Responsable" prefWidth="150"/>
+                                        <TableColumn fx:id="colDet"  text="Detalles" prefWidth="380"/>
+                                        <TableColumn fx:id="colStock" text="Stock" prefWidth="140"/>
+                                        <TableColumn fx:id="colAccion" text="Acciones" prefWidth="100"/>
+                                    </columns>
+                                </TableView>
+                            </children>
+                        </VBox>
+
+                        <!-- Acciones rápidas -->
+                        <HBox spacing="10">
+                            <children>
+                                <Button text="Entrada rápida" styleClass="primary" onAction="#onEntrada"/>
+                                <Button text="Salida rápida"  styleClass="primary" onAction="#onSalida"/>
+                                <Button text="Exportar CSV"   styleClass="secondary" onAction="#onExportar"/>
+                            </children>
+                        </HBox>
+
+                    </children>
+                    <padding><Insets topRightBottomLeft="16"/></padding>
+                </VBox>
+            </content>
+        </ScrollPane>
+    </center>
+
+</BorderPane>

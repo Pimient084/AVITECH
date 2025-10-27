@@ -9,6 +9,7 @@ import javafx.scene.Scene;
 import javafx.stage.Stage;
 
 import java.io.IOException;
+import java.net.URL;
 
 public class App extends Application {
 
@@ -29,10 +30,21 @@ public class App extends Application {
 
     public static void goTo(String fxml, String title) {
         try {
-            FXMLLoader loader = new FXMLLoader(App.class.getResource(fxml));
+            URL fxmlUrl = App.class.getResource(fxml);
+            if (fxmlUrl == null) {
+                throw new IOException("FXML file not found: " + fxml);
+            }
+            FXMLLoader loader = new FXMLLoader(fxmlUrl);
             Parent root = loader.load();
             Scene scene = new Scene(root);
-            scene.getStylesheets().add(App.class.getResource("/css/theme.css").toExternalForm());
+            
+            URL cssUrl = App.class.getResource("/css/theme.css");
+            if (cssUrl == null) {
+                System.err.println("Warning: CSS file not found: /css/theme.css");
+            } else {
+                scene.getStylesheets().add(cssUrl.toExternalForm());
+            }
+            
             mainStage.setTitle(title);
             mainStage.setScene(scene);
         } catch (IOException e) {

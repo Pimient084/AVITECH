@@ -5,20 +5,20 @@
 <?import javafx.scene.layout.*?>
 
 <BorderPane xmlns:fx="http://javafx.com/fxml"
-            fx:controller="com.avitech.sia.iu.DashboardController"
+            fx:controller="com.avitech.sia.iu.DashboardOperController"
             prefWidth="1280" prefHeight="800">
 
-    <!-- ===== SIDEBAR (scroll propio) ===== -->
+    <!-- ===== SIDEBAR ===== -->
     <left>
         <ScrollPane fx:id="spMenu"
-                    fitToWidth="true" fitToHeight="false"
+                    fitToWidth="true" fitToHeight="true"
                     vbarPolicy="AS_NEEDED" hbarPolicy="NEVER"
                     pannable="true" prefWidth="270"
                     styleClass="side-scroll">
             <content>
                 <VBox fx:id="sidebar" spacing="10" styleClass="sidebar"
                       minWidth="270" prefWidth="270" maxWidth="270"
-                      fillWidth="true">
+                      fillWidth="true" VBox.vgrow="ALWAYS">
                     <children>
 
                         <Label text="Menú Principal" styleClass="sidebar-title"/>
@@ -28,7 +28,7 @@
                             <ToggleGroup fx:id="sideGroup"/>
                         </fx:define>
 
-                        <!-- 10 botones exactos, 1 por sección -->
+                        <!-- Operator-specific buttons -->
                         <ToggleButton text="Tablero"       toggleGroup="$sideGroup" onAction="#goDashboard"  styleClass="side-btn active"/>
                         <ToggleButton text="Suministros"   toggleGroup="$sideGroup" onAction="#goSupplies"   styleClass="side-btn"/>
                         <ToggleButton text="Sanidad"       toggleGroup="$sideGroup" onAction="#goHealth"     styleClass="side-btn"/>
@@ -57,7 +57,7 @@
             <children>
                 <Label text="AVITECH — SIA" styleClass="topbar-brand"/>
                 <Pane HBox.hgrow="ALWAYS"/>
-                <Label fx:id="lblSystemStatus" text="Sistema Offline – MySQL Local" styleClass="topbar-status"/>
+                <Label fx:id="lblSystemStatus" text="Sistema Online – MySQL Local" styleClass="topbar-status"/>
                 <Separator orientation="VERTICAL"/>
                 <Label fx:id="lblHeader" text="Operador"/>
                 <Button text="↩ Salir" onAction="#onExit" styleClass="ghostBtn"/>
@@ -66,148 +66,140 @@
         </HBox>
     </top>
 
-    <!-- ===== CONTENIDO (scroll propio) ===== -->
+    <!-- ===== CONTENIDO ===== -->
     <center>
-        <ScrollPane fx:id="spContent"
-                    fitToWidth="true" fitToHeight="false"
-                    vbarPolicy="AS_NEEDED" hbarPolicy="AS_NEEDED"
-                    pannable="true">
-            <content>
-                <!-- IMPORTANTE: maxWidth="Infinity" y fillWidth="true" -->
-                <VBox fx:id="contentRoot" spacing="18" styleClass="content"
-                      fillWidth="true" maxWidth="Infinity">
+        <VBox fx:id="contentRoot" spacing="18" styleClass="content"
+              fillWidth="true" maxWidth="Infinity">
+            <children>
+                <Label text="Tablero Principal (Operador)" styleClass="h2"/>
+                <Label text="Resumen general del sistema avícola para operadores" styleClass="helper"/>
+
+                <!-- KPIs -->
+                <HBox spacing="12">
                     <children>
-                        <Label text="Tablero Principal (Operador)" styleClass="h2"/>
-                        <Label text="Resumen general del sistema avícola para operadores" styleClass="helper"/>
-
-                        <!-- KPIs -->
-                        <HBox spacing="12">
+                        <VBox styleClass="card" minWidth="0" prefWidth="280" HBox.hgrow="ALWAYS">
                             <children>
-                                <VBox styleClass="card" minWidth="0" prefWidth="280" HBox.hgrow="ALWAYS">
-                                    <children>
-                                        <Label text="Aves Activas" styleClass="card-title"/>
-                                        <Label fx:id="lblAvesActivas" text="—" styleClass="card-kpi"/>
-                                        <Label fx:id="lblAvesActivasDelta" text="+0" styleClass="card-delta"/>
-                                    </children>
-                                </VBox>
-
-                                <VBox styleClass="card" minWidth="0" prefWidth="280" HBox.hgrow="ALWAYS">
-                                    <children>
-                                        <Label text="Producción Diaria de Huevos" styleClass="card-title"/>
-                                        <Label fx:id="lblHuevosDia" text="—" styleClass="card-kpi"/>
-                                        <Label fx:id="lblHuevosDiaDelta" text="+0%" styleClass="card-delta"/>
-                                    </children>
-                                </VBox>
-
-                                <VBox styleClass="card" minWidth="0" prefWidth="280" HBox.hgrow="ALWAYS">
-                                    <children>
-                                        <Label text="Suministros Disponibles" styleClass="card-title"/>
-                                        <Label fx:id="lblSuministros" text="—" styleClass="card-kpi"/>
-                                        <Label fx:id="lblSuministrosDelta" text="-0%" styleClass="card-delta bad"/>
-                                    </children>
-                                </VBox>
-
-                                <VBox styleClass="card" minWidth="0" prefWidth="280" HBox.hgrow="ALWAYS">
-                                    <children>
-                                        <Label text="Alertas de Stock Bajo" styleClass="card-title"/>
-                                        <Label fx:id="lblAlertas" text="—" styleClass="card-kpi"/>
-                                        <Label fx:id="lblAlertasDelta" text="+0" styleClass="card-delta bad"/>
-                                    </children>
-                                </VBox>
-                            </children>
-                        </HBox>
-
-                        <!-- Gráfico + alertas recientes -->
-                        <HBox spacing="12">
-                            <children>
-                                <VBox styleClass="card" minWidth="0" HBox.hgrow="ALWAYS">
-                                    <children>
-                                        <Label text="Producción Semanal" styleClass="card-title"/>
-                                        <LineChart fx:id="chartSemanal"
-                                                   animated="false" createSymbols="true" legendVisible="false"
-                                                   minWidth="0" prefHeight="260" HBox.hgrow="ALWAYS">
-                                            <xAxis><CategoryAxis label="Día"/></xAxis>
-                                            <yAxis><NumberAxis  label="Huevos"/></yAxis>
-                                        </LineChart>
-                                        <Label text="Producción Real — Meta Diaria" styleClass="helper"/>
-                                    </children>
-                                </VBox>
-
-                                <VBox styleClass="card" minWidth="280" prefWidth="360" HBox.hgrow="NEVER">
-                                    <children>
-                                        <Label text="Alertas Recientes" styleClass="card-title"/>
-                                        <ListView fx:id="listAlertas" prefHeight="260"/>
-                                        <Button text="Ver historial de alertas" styleClass="ghostBtn"/>
-                                    </children>
-                                </VBox>
-                            </children>
-                        </HBox>
-
-                        <!-- Producción por galpón -->
-                        <VBox styleClass="card" minWidth="0">
-                            <children>
-                                <Label text="Producción por Galpón" styleClass="card-title"/>
-                                <Label text="Rendimiento actual de cada instalación" styleClass="helper"/>
-
-                                <GridPane hgap="10" vgap="10">
-                                    <columnConstraints>
-                                        <ColumnConstraints minWidth="80"  prefWidth="90"/>
-                                        <ColumnConstraints hgrow="ALWAYS" minWidth="100"/>
-                                        <ColumnConstraints minWidth="110" prefWidth="120"/>
-                                    </columnConstraints>
-
-                                    <!-- G1 -->
-                                    <Label text="Galpón 1" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
-                                    <ProgressBar fx:id="pbG1" maxWidth="Infinity"
-                                                 GridPane.rowIndex="0" GridPane.columnIndex="1"/>
-                                    <Label fx:id="lblG1" text="0/0 (0%)" GridPane.rowIndex="0" GridPane.columnIndex="2"/>
-
-                                    <!-- G2 -->
-                                    <Label text="Galpón 2" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
-                                    <ProgressBar fx:id="pbG2" maxWidth="Infinity"
-                                                 GridPane.rowIndex="1" GridPane.columnIndex="1"/>
-                                    <Label fx:id="lblG2" text="0/0 (0%)" GridPane.rowIndex="1" GridPane.columnIndex="2"/>
-
-                                    <!-- G3 -->
-                                    <Label text="Galpón 3" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
-                                    <ProgressBar fx:id="pbG3" maxWidth="Infinity"
-                                                 GridPane.rowIndex="2" GridPane.columnIndex="1"/>
-                                    <Label fx:id="lblG3" text="0/0 (0%)" GridPane.rowIndex="2" GridPane.columnIndex="2"/>
-
-                                    <!-- G4 -->
-                                    <Label text="Galpón 4" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
-                                    <ProgressBar fx:id="pbG4" maxWidth="Infinity"
-                                                 GridPane.rowIndex="3" GridPane.columnIndex="1"/>
-                                    <Label fx:id="lblG4" text="0/0 (0%)" GridPane.rowIndex="3" GridPane.columnIndex="2"/>
-
-                                    <!-- G5 -->
-                                    <Label text="Galpón 5" GridPane.rowIndex="4" GridPane.columnIndex="0"/>
-                                    <ProgressBar fx:id="pbG5" maxWidth="Infinity"
-                                                 GridPane.rowIndex="4" GridPane.columnIndex="1"/>
-                                    <Label fx:id="lblG5" text="0/0 (0%)" GridPane.rowIndex="4" GridPane.columnIndex="2"/>
-
-                                    <!-- G6 -->
-                                    <Label text="Galpón 6" GridPane.rowIndex="5" GridPane.columnIndex="0"/>
-                                    <ProgressBar fx:id="pbG6" maxWidth="Infinity"
-                                                 GridPane.rowIndex="5" GridPane.columnIndex="1"/>
-                                    <Label fx:id="lblG6" text="0/0 (0%)" GridPane.rowIndex="5" GridPane.columnIndex="2"/>
-                                </GridPane>
+                                <Label text="Aves Activas" styleClass="card-title"/>
+                                <Label fx:id="lblAvesActivas" text="—" styleClass="card-kpi"/>
+                                <Label fx:id="lblAvesActivasDelta" text="+0" styleClass="card-delta"/>
                             </children>
                         </VBox>
 
-                        <!-- Acciones rápidas -->
-                        <HBox spacing="10">
+                        <VBox styleClass="card" minWidth="0" prefWidth="280" HBox.hgrow="ALWAYS">
                             <children>
-                                <Button text="Registrar Producción" styleClass="primary" prefWidth="220"/>
-                                <Button text="Gestionar Suministros" styleClass="primary" prefWidth="220"/>
-                                <Button text="Registro Sanitario" styleClass="primary" prefWidth="220"/>
+                                <Label text="Producción Diaria de Huevos" styleClass="card-title"/>
+                                <Label fx:id="lblHuevosDia" text="—" styleClass="card-kpi"/>
+                                <Label fx:id="lblHuevosDiaDelta" text="+0%" styleClass="card-delta"/>
                             </children>
-                        </HBox>
+                        </VBox>
+
+                        <VBox styleClass="card" minWidth="0" prefWidth="280" HBox.hgrow="ALWAYS">
+                            <children>
+                                <Label text="Suministros Disponibles" styleClass="card-title"/>
+                                <Label fx:id="lblSuministros" text="—" styleClass="card-kpi"/>
+                                <Label fx:id="lblSuministrosDelta" text="-0%" styleClass="card-delta bad"/>
+                            </children>
+                        </VBox>
+
+                        <VBox styleClass="card" minWidth="0" prefWidth="280" HBox.hgrow="ALWAYS">
+                            <children>
+                                <Label text="Alertas de Stock Bajo" styleClass="card-title"/>
+                                <Label fx:id="lblAlertas" text="—" styleClass="card-kpi"/>
+                                <Label fx:id="lblAlertasDelta" text="+0" styleClass="card-delta bad"/>
+                            </children>
+                        </VBox>
                     </children>
-                    <padding><Insets topRightBottomLeft="16"/></padding>
+                </HBox>
+
+                <!-- Gráfico + alertas recientes -->
+                <HBox spacing="12">
+                    <children>
+                        <VBox styleClass="card" minWidth="0" HBox.hgrow="ALWAYS">
+                            <children>
+                                <Label text="Producción Semanal" styleClass="card-title"/>
+                                <LineChart fx:id="chartSemanal"
+                                           animated="false" createSymbols="true" legendVisible="false"
+                                           minWidth="0" prefHeight="260" HBox.hgrow="ALWAYS">
+                                    <xAxis><CategoryAxis label="Día"/></xAxis>
+                                    <yAxis><NumberAxis  label="Huevos"/></yAxis>
+                                </LineChart>
+                                <Label text="Producción Real — Meta Diaria" styleClass="helper"/>
+                            </children>
+                        </VBox>
+
+                        <VBox styleClass="card" minWidth="280" prefWidth="360" HBox.hgrow="NEVER">
+                            <children>
+                                <Label text="Alertas Recientes" styleClass="card-title"/>
+                                <ListView fx:id="listAlertas" prefHeight="260"/>
+                                <Button text="Ver historial de alertas" styleClass="ghostBtn"/>
+                            </children>
+                        </VBox>
+                    </children>
+                </HBox>
+
+                <!-- Producción por galpón -->
+                <VBox styleClass="card" minWidth="0">
+                    <children>
+                        <Label text="Producción por Galpón" styleClass="card-title"/>
+                        <Label text="Rendimiento actual de cada instalación" styleClass="helper"/>
+
+                        <GridPane hgap="10" vgap="10">
+                            <columnConstraints>
+                                <ColumnConstraints minWidth="80"  prefWidth="90"/>
+                                <ColumnConstraints hgrow="ALWAYS" minWidth="100"/>
+                                <ColumnConstraints minWidth="110" prefWidth="120"/>
+                            </columnConstraints>
+
+                            <!-- G1 -->
+                            <Label text="Galpón 1" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+                            <ProgressBar fx:id="pbG1" maxWidth="Infinity"
+                                         GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+                            <Label fx:id="lblG1" text="0/0 (0%)" GridPane.rowIndex="0" GridPane.columnIndex="2"/>
+
+                            <!-- G2 -->
+                            <Label text="Galpón 2" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+                            <ProgressBar fx:id="pbG2" maxWidth="Infinity"
+                                         GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+                            <Label fx:id="lblG2" text="0/0 (0%)" GridPane.rowIndex="1" GridPane.columnIndex="2"/>
+
+                            <!-- G3 -->
+                            <Label text="Galpón 3" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+                            <ProgressBar fx:id="pbG3" maxWidth="Infinity"
+                                         GridPane.rowIndex="2" GridPane.columnIndex="1"/>
+                            <Label fx:id="lblG3" text="0/0 (0%)" GridPane.rowIndex="2" GridPane.columnIndex="2"/>
+
+                            <!-- G4 -->
+                            <Label text="Galpón 4" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
+                            <ProgressBar fx:id="pbG4" maxWidth="Infinity"
+                                         GridPane.rowIndex="3" GridPane.columnIndex="1"/>
+                            <Label fx:id="lblG4" text="0/0 (0%)" GridPane.rowIndex="3" GridPane.columnIndex="2"/>
+
+                            <!-- G5 -->
+                            <Label text="Galpón 5" GridPane.rowIndex="4" GridPane.columnIndex="0"/>
+                            <ProgressBar fx:id="pbG5" maxWidth="Infinity"
+                                         GridPane.rowIndex="4" GridPane.columnIndex="1"/>
+                            <Label fx:id="lblG5" text="0/0 (0%)" GridPane.rowIndex="4" GridPane.columnIndex="2"/>
+
+                            <!-- G6 -->
+                            <Label text="Galpón 6" GridPane.rowIndex="5" GridPane.columnIndex="0"/>
+                            <ProgressBar fx:id="pbG6" maxWidth="Infinity"
+                                         GridPane.rowIndex="5" GridPane.columnIndex="1"/>
+                            <Label fx:id="lblG6" text="0/0 (0%)" GridPane.rowIndex="5" GridPane.columnIndex="2"/>
+                        </GridPane>
+                    </children>
                 </VBox>
-            </content>
-        </ScrollPane>
+
+                <!-- Acciones rápidas -->
+                <HBox spacing="10">
+                    <children>
+                        <Button text="Registrar Producción" styleClass="primary" prefWidth="220"/>
+                        <Button text="Gestionar Suministros" styleClass="primary" prefWidth="220"/>
+                        <Button text="Registro Sanitario" styleClass="primary" prefWidth="220"/>
+                    </children>
+                </HBox>
+            </children>
+            <padding><Insets topRightBottomLeft="16"/></padding>
+        </VBox>
     </center>
 
 </BorderPane>

@@ -1,0 +1,269 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.cell.*?>
+
+<BorderPane xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.avitech.sia.iu.superv.ReportesSupervisorController"
+            prefWidth="1280" prefHeight="800">
+
+    <!-- ============== SIDEBAR (scroll propio) ============== -->
+    <left>
+        <ScrollPane fitToWidth="true" fitToHeight="true" hbarPolicy="NEVER" prefWidth="270" styleClass="side-scroll">
+            <content>
+                <VBox fx:id="sidebar" spacing="10" styleClass="sidebar" prefWidth="270" VBox.vgrow="ALWAYS">
+                    <children>
+
+                        <Label text="Menú Principal" styleClass="sidebar-title"/>
+
+                        <fx:define>
+                            <ToggleGroup fx:id="sideGroup"/>
+                        </fx:define>
+
+                        <ToggleButton text="Tablero"       toggleGroup="$sideGroup" onAction="#goDashboard"  styleClass="side-btn"/>
+                        <ToggleButton text="Suministros"   toggleGroup="$sideGroup" onAction="#goSupplies"   styleClass="side-btn"/>
+                        <ToggleButton text="Sanidad"       toggleGroup="$sideGroup" onAction="#goHealth"     styleClass="side-btn"/>
+                        <ToggleButton text="Producción"    toggleGroup="$sideGroup" onAction="#goProduction" styleClass="side-btn"/>
+                        <ToggleButton text="Alertas"       toggleGroup="$sideGroup" onAction="#goAlerts"     styleClass="side-btn"/>
+
+                        <Region VBox.vgrow="ALWAYS"/>
+
+                        <Label text="Usuario del sistema" styleClass="sidebar-subtitle"/>
+                        <Label fx:id="lblUserInfo" text="Supervisor" styleClass="sidebar-user"/>
+
+                        <Button text="Cerrar sesión" onAction="#onExit" styleClass="side-logout"/>
+                    </children>
+
+                    <padding>
+                        <Insets top="16" right="16" bottom="16" left="16"/>
+                    </padding>
+                </VBox>
+            </content>
+        </ScrollPane>
+    </left>
+
+    <!-- ============== TOP BAR ============== -->
+    <top>
+        <HBox spacing="12" styleClass="topbar">
+            <children>
+                <Label text="AVITECH — SIA" styleClass="topbar-brand"/>
+                <Pane HBox.hgrow="ALWAYS"/>
+                <Label fx:id="lblSystemStatus" text="Sistema Offline – MySQL Local" styleClass="topbar-status"/>
+                <Separator orientation="VERTICAL"/>
+                <Label fx:id="lblHeader" text="Supervisor"/>
+                <Button text="↩ Salir" onAction="#onExit" styleClass="ghostBtn"/>
+            </children>
+            <padding><Insets topRightBottomLeft="10"/></padding>
+        </HBox>
+    </top>
+
+    <!-- ============== CONTENIDO (scroll propio) ============== -->
+    <center>
+        <ScrollPane fitToWidth="true" hbarPolicy="NEVER">
+            <content>
+                <VBox spacing="18" styleClass="content">
+                    <padding><Insets topRightBottomLeft="16"/></padding>
+
+                    <!-- Título + acción principal -->
+                    <HBox alignment="CENTER_LEFT" spacing="12">
+                        <children>
+                            <Label text="Generación de Reportes" styleClass="h2"/>
+                            <Pane HBox.hgrow="ALWAYS"/>
+                            <Button fx:id="btnGenerar" text="🧾 Generar Reporte" styleClass="primary" onAction="#onGenerar"/>
+                            <Button text="Limpiar" onAction="#onLimpiar" styleClass="secondary"/>
+                        </children>
+                    </HBox>
+
+                    <!-- Filtros comunes -->
+                    <VBox styleClass="card" spacing="10">
+                        <children>
+                            <Label text="Filtros Comunes" styleClass="card-title"/>
+                            <GridPane hgap="10" vgap="10">
+                                <columnConstraints>
+                                    <ColumnConstraints percentWidth="16.6"/>
+                                    <ColumnConstraints percentWidth="16.6"/>
+                                    <ColumnConstraints percentWidth="16.6"/>
+                                    <ColumnConstraints percentWidth="16.6"/>
+                                    <ColumnConstraints percentWidth="16.6"/>
+                                    <ColumnConstraints percentWidth="16.6"/>
+                                </columnConstraints>
+
+                                <Label text="Fecha Desde" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+                                <DatePicker fx:id="dpDesde" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+
+                                <Label text="Fecha Hasta" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+                                <DatePicker fx:id="dpHasta" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+
+                                <Label text="Lote" GridPane.rowIndex="0" GridPane.columnIndex="2"/>
+                                <ComboBox fx:id="cbLote" promptText="Todos los lotes" GridPane.rowIndex="1" GridPane.columnIndex="2"/>
+
+                                <Label text="Artículo" GridPane.rowIndex="0" GridPane.columnIndex="3"/>
+                                <ComboBox fx:id="cbArticulo" promptText="Todos los artículos" GridPane.rowIndex="1" GridPane.columnIndex="3"/>
+
+                                <Label text="Categoría" GridPane.rowIndex="0" GridPane.columnIndex="4"/>
+                                <ComboBox fx:id="cbCategoria" promptText="Todas las categorías" GridPane.rowIndex="1" GridPane.columnIndex="4"/>
+
+                                <Label text="Responsable" GridPane.rowIndex="0" GridPane.columnIndex="5"/>
+                                <ComboBox fx:id="cbResponsable" promptText="Todos los responsables" GridPane.rowIndex="1" GridPane.columnIndex="5"/>
+                            </GridPane>
+                        </children>
+                    </VBox>
+
+                    <!-- Tarjetas de tipo de reporte -->
+                    <GridPane hgap="12" vgap="12">
+                        <columnConstraints>
+                            <ColumnConstraints percentWidth="33.3"/>
+                            <ColumnConstraints percentWidth="33.3"/>
+                            <ColumnConstraints percentWidth="33.3"/>
+                        </columnConstraints>
+
+                        <!-- Fila 1 -->
+                        <VBox styleClass="card" GridPane.columnIndex="0">
+                            <children>
+                                <Label text="Stock Actual" styleClass="card-title"/>
+                                <Label text="Inventario actual de insumos y productos" styleClass="helper"/>
+                                <Button text="Inventario" onAction="#selStockActual" styleClass="secondary"/>
+                            </children>
+                        </VBox>
+                        <VBox styleClass="card" GridPane.columnIndex="1">
+                            <children>
+                                <Label text="Registro por Artículo" styleClass="card-title"/>
+                                <Label text="Movimientos detallados de artículos específicos" styleClass="helper"/>
+                                <Button text="Inventario" onAction="#selRegistroArticulo" styleClass="secondary"/>
+                            </children>
+                        </VBox>
+                        <VBox styleClass="card" GridPane.columnIndex="2">
+                            <children>
+                                <Label text="Recibos de Insumos" styleClass="card-title"/>
+                                <Label text="Registro de entradas y compras" styleClass="helper"/>
+                                <Button text="Compras" onAction="#selRecibosInsumos" styleClass="secondary"/>
+                            </children>
+                        </VBox>
+
+                        <!-- Fila 2 -->
+                        <VBox styleClass="card" GridPane.rowIndex="1" GridPane.columnIndex="0">
+                            <children>
+                                <Label text="Consumo de Alimento" styleClass="card-title"/>
+                                <Label text="Análisis de consumo de alimento por lote" styleClass="helper"/>
+                                <Button text="Alimentación" onAction="#selConsumoAlimento" styleClass="secondary"/>
+                            </children>
+                        </VBox>
+                        <VBox styleClass="card" GridPane.rowIndex="1" GridPane.columnIndex="1">
+                            <children>
+                                <Label text="Aplicaciones Sanitarias" styleClass="card-title"/>
+                                <Label text="Registro de vacunas y tratamientos aplicados" styleClass="helper"/>
+                                <Button text="Sanidad" onAction="#selAplicacionesSanitarias" styleClass="secondary"/>
+                            </children>
+                        </VBox>
+                        <VBox styleClass="card" GridPane.rowIndex="1" GridPane.columnIndex="2">
+                            <children>
+                                <Label text="Producción por Lote/Tamaño" styleClass="card-title"/>
+                                <Label text="Análisis detallado de producción clasificada" styleClass="helper"/>
+                                <Button text="Producción" onAction="#selProduccionTam" styleClass="secondary"/>
+                            </children>
+                        </VBox>
+
+                        <!-- Fila 3 -->
+                        <VBox styleClass="card" GridPane.rowIndex="2" GridPane.columnIndex="0">
+                            <children>
+                                <Label text="Mortalidad" styleClass="card-title"/>
+                                <Label text="Registro y análisis de casos de mortalidad" styleClass="helper"/>
+                                <Button text="Sanidad" onAction="#selMortalidad" styleClass="secondary"/>
+                            </children>
+                        </VBox>
+                    </GridPane>
+
+                    <!-- Registro por artículo + exportación -->
+                    <VBox styleClass="card" spacing="12">
+                        <children>
+                            <Label text="Registro por Artículo" styleClass="card-title"/>
+
+                            <!-- DEFINE: ToggleGroup no es un Node, debe ir en fx:define -->
+                            <fx:define>
+                                <ToggleGroup fx:id="formatGroup"/>
+                            </fx:define>
+
+                            <HBox alignment="CENTER_LEFT" spacing="16">
+                                <children>
+                                    <Label text="Formato de Exportación"/>
+
+                                    <!-- ahora cada RadioButton usa el grupo definido -->
+                                    <RadioButton fx:id="rbPdf"   text="PDF"   selected="true" toggleGroup="$formatGroup"/>
+                                    <RadioButton fx:id="rbExcel" text="Excel"              toggleGroup="$formatGroup"/>
+
+                                    <Separator orientation="VERTICAL"/>
+                                    <CheckBox fx:id="chkPreview" text="Vista Previa"/>
+                                    <Pane HBox.hgrow="ALWAYS"/>
+                                    <Button text="📤 Exportar a Excel" onAction="#onExportarExcel" styleClass="secondary"/>
+                                </children>
+                            </HBox>
+
+                            <Label fx:id="lblInfoFiltros"
+                                   text="Filtros aplicados: reportes se generarán considerando los filtros seleccionados arriba."
+                                   styleClass="helper"/>
+                        </children>
+                    </VBox>
+
+
+                    <!-- Recientes + Estadísticos -->
+                    <HBox spacing="12">
+                        <children>
+                            <!-- Recientes -->
+                            <VBox styleClass="card" spacing="10" HBox.hgrow="ALWAYS">
+                                <children>
+                                    <Label text="Reportes Recientes" styleClass="card-title"/>
+                                    <TableView fx:id="tvRecientes" prefHeight="280">
+                                        <columns>
+                                            <TableColumn fx:id="colRepNombre" text="Nombre" prefWidth="360"/>
+                                            <TableColumn fx:id="colRepFecha"  text="Fecha"  prefWidth="140"/>
+                                            <TableColumn fx:id="colRepTam"    text="Tamaño" prefWidth="120"/>
+                                            <TableColumn fx:id="colRepAccion" text="Acciones" prefWidth="160"/>
+                                        </columns>
+                                    </TableView>
+                                </children>
+                            </VBox>
+
+                            <!-- Estadísticos -->
+                            <VBox styleClass="card" spacing="10" prefWidth="320">
+                                <children>
+                                    <Label text="Estadísticos" styleClass="card-title"/>
+
+                                    <GridPane hgap="8" vgap="8">
+                                        <columnConstraints>
+                                            <ColumnConstraints percentWidth="60"/>
+                                            <ColumnConstraints percentWidth="40"/>
+                                        </columnConstraints>
+
+                                        <Label text="Reportes Este Mes" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+                                        <Label fx:id="lblKpiMes" text="0" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+
+                                        <Label text="Más Solicitado" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+                                        <Label fx:id="lblMasSolicitado" text="—" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+
+                                        <Label text="Formatos Populares" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+                                        <Label fx:id="lblFormatos" text="PDF / Excel" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
+
+                                        <Label text="Tiempo Promedio" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
+                                        <Label fx:id="lblTPromedio" text="—" GridPane.rowIndex="3" GridPane.columnIndex="1"/>
+                                    </GridPane>
+
+                                    <Separator/>
+
+                                    <Label text="Inventario" styleClass="helper"/>
+                                    <ProgressBar fx:id="pbInv" progress="0.45"/>
+                                    <Label text="Producción" styleClass="helper"/>
+                                    <ProgressBar fx:id="pbProd" progress="0.30"/>
+                                    <Label text="Sanidad" styleClass="helper"/>
+                                    <ProgressBar fx:id="pbSan" progress="0.25"/>
+                                </children>
+                            </VBox>
+                        </children>
+                    </HBox>
+
+                </VBox>
+            </content>
+        </ScrollPane>
+    </center>
+
+</BorderPane>

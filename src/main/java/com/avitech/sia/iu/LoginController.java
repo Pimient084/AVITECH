@@ -96,7 +96,8 @@ public class LoginController {
                             App.goTo("/fxml/dashboard_admin.fxml", "SIA Avitech — ADMIN");
                             break;
                         case "SUPERVISOR":
-                            App.goTo("/fxml/dashboard_super.fxml", "SIA Avitech — SUPERVISOR");
+                            // Abrir la vista dedicada al rol Supervisor dentro de /fxml/superv
+                            App.goTo("/fxml/superv/dashboard_super.fxml", "SIA Avitech — SUPERVISOR");
                             break;
                         case "OPERADOR":
                             App.goTo("/fxml/dashboard_oper.fxml", "SIA Avitech — OPERADOR");

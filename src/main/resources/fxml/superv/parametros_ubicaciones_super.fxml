@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<VBox xmlns:fx="http://javafx.com/fxml" spacing="12"
+      fx:controller="com.avitech.sia.iu.superv.parametros.UbicacionesSupervisorController">
+    <children>
+        <HBox spacing="10">
+            <children>
+                <TextField fx:id="txtSearch" promptText="Buscar..." />
+                <ComboBox fx:id="cbEstado" prefWidth="180"/>
+                <Pane HBox.hgrow="ALWAYS"/>
+                <Button text="+ Agregar" onAction="#onAgregar" styleClass="primary"/>
+            </children>
+        </HBox>
+
+        <TableView fx:id="tbl" prefHeight="420">
+            <columns>
+                <TableColumn text="Nombre" fx:id="cNombre" prefWidth="220"/>
+                <TableColumn text="Tipo" fx:id="cTipo" prefWidth="120"/>
+                <TableColumn text="Capacidad" fx:id="cCapacidad" prefWidth="130"/>
+                <TableColumn text="Responsable" fx:id="cResp" prefWidth="180"/>
+                <TableColumn text="Estado" fx:id="cEstado" prefWidth="100"/>
+                <TableColumn text="Acciones" fx:id="cAccion" prefWidth="120"/>
+            </columns>
+        </TableView>
+    </children>
+</VBox>

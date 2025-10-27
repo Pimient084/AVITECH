@@ -5,7 +5,7 @@
 <?import javafx.scene.layout.*?>
 
 <BorderPane xmlns:fx="http://javafx.com/fxml"
-            fx:controller="com.avitech.sia.iu.DashboardSupervisorController"
+            fx:controller="com.avitech.sia.iu.superv.DashboardSupervisorController"
             prefWidth="1280" prefHeight="800">
 
     <!-- ===== SIDEBAR (scroll propio) ===== -->
@@ -23,22 +23,16 @@
 
                         <Label text="Menú Principal" styleClass="sidebar-title"/>
 
-                        <!-- ToggleGroup para estado “activo” -->
                         <fx:define>
                             <ToggleGroup fx:id="sideGroup"/>
                         </fx:define>
 
-                        <!-- 10 botones exactos, 1 por sección -->
+                        <!-- Sólo las opciones necesarias para Supervisor -->
                         <ToggleButton text="Tablero"       toggleGroup="$sideGroup" onAction="#goDashboard"  styleClass="side-btn active"/>
                         <ToggleButton text="Suministros"   toggleGroup="$sideGroup" onAction="#goSupplies"   styleClass="side-btn"/>
                         <ToggleButton text="Sanidad"       toggleGroup="$sideGroup" onAction="#goHealth"     styleClass="side-btn"/>
                         <ToggleButton text="Producción"    toggleGroup="$sideGroup" onAction="#goProduction" styleClass="side-btn"/>
-                        <ToggleButton text="Reportes"      toggleGroup="$sideGroup" onAction="#goReports"    styleClass="side-btn"/>
                         <ToggleButton text="Alertas"       toggleGroup="$sideGroup" onAction="#goAlerts"     styleClass="side-btn"/>
-                        <ToggleButton text="Auditoría"     toggleGroup="$sideGroup" onAction="#goAudit"      styleClass="side-btn"/>
-                        <ToggleButton text="Parámetros"    toggleGroup="$sideGroup" onAction="#goParams"     styleClass="side-btn"/>
-                        <ToggleButton text="Usuarios"      toggleGroup="$sideGroup" onAction="#goUsers"      styleClass="side-btn"/>
-                        <ToggleButton text="Respaldos"     toggleGroup="$sideGroup" onAction="#goBackup"     styleClass="side-btn"/>
 
                         <Region VBox.vgrow="ALWAYS"/>
 

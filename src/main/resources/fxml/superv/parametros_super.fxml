@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.avitech.sia.iu.superv.ParametrosSupervisorController"
+            prefWidth="1280" prefHeight="800">
+
+    <!-- SIDEBAR (igual a las otras pantallas) -->
+    <left>
+        <ScrollPane fitToWidth="true" fitToHeight="true" hbarPolicy="NEVER" prefWidth="270" styleClass="side-scroll">
+            <content>
+                <VBox fx:id="sidebar" spacing="10" styleClass="sidebar" prefWidth="270" VBox.vgrow="ALWAYS">
+                    <children>
+                        <Label text="Menú Principal" styleClass="sidebar-title"/>
+                        <fx:define>
+                            <ToggleGroup fx:id="sideGroup"/>
+                        </fx:define>
+
+                        <ToggleButton text="Tablero"     toggleGroup="$sideGroup" onAction="#goDashboard"  styleClass="side-btn"/>
+                        <ToggleButton text="Suministros" toggleGroup="$sideGroup" onAction="#goSupplies"   styleClass="side-btn"/>
+                        <ToggleButton text="Sanidad"     toggleGroup="$sideGroup" onAction="#goHealth"     styleClass="side-btn"/>
+                        <ToggleButton text="Producción"  toggleGroup="$sideGroup" onAction="#goProduction" styleClass="side-btn"/>
+                        <ToggleButton text="Reportes"    toggleGroup="$sideGroup" onAction="#goReports"    styleClass="side-btn"/>
+                        <ToggleButton text="Alertas"     toggleGroup="$sideGroup" onAction="#goAlerts"     styleClass="side-btn"/>
+                        <ToggleButton text="Auditoría"   toggleGroup="$sideGroup" onAction="#goAudit"      styleClass="side-btn"/>
+                        <ToggleButton text="Parámetros"  toggleGroup="$sideGroup" styleClass="side-btn active" selected="true"/>
+                        <ToggleButton text="Usuarios"    toggleGroup="$sideGroup" onAction="#goUsers"      styleClass="side-btn"/>
+                        <ToggleButton text="Respaldos"   toggleGroup="$sideGroup" onAction="#goBackup"     styleClass="side-btn"/>
+
+                        <Region VBox.vgrow="ALWAYS"/>
+                        <Label text="Usuario del sistema" styleClass="sidebar-subtitle"/>
+                        <Label fx:id="lblUserInfo" text="Supervisor" styleClass="sidebar-user"/>
+                        <Button text="Cerrar sesión" onAction="#onExit" styleClass="side-logout"/>
+                    </children>
+                    <padding><Insets topRightBottomLeft="16"/></padding>
+                </VBox>
+            </content>
+        </ScrollPane>
+    </left>
+
+    <!-- TOP BAR -->
+    <top>
+        <HBox spacing="12" styleClass="topbar">
+            <children>
+                <Label text="AVITECH — SIA" styleClass="topbar-brand"/>
+                <Pane HBox.hgrow="ALWAYS"/>
+                <Label fx:id="lblSystemStatus" text="Sistema Offline – MySQL Local" styleClass="topbar-status"/>
+                <Separator orientation="VERTICAL"/>
+                <Label fx:id="lblHeader" text="Supervisor"/>
+                <Button text="↩ Volver" onAction="#goDashboard" styleClass="ghostBtn"/>
+            </children>
+            <padding><Insets topRightBottomLeft="10"/></padding>
+        </HBox>
+    </top>
+
+    <!-- CONTENIDO -->
+    <center>
+        <ScrollPane fitToWidth="true" fitToHeight="true" hbarPolicy="NEVER">
+            <content>
+                <VBox spacing="18" styleClass="content">
+                    <children>
+                        <Label text="Parámetros del Sistema" styleClass="h2"/>
+                        <Label text="Configuración de unidades, categorías, medicamentos, lotes y ubicaciones" styleClass="helper"/>
+
+                        <!-- Segmentos -->
+                        <HBox spacing="8">
+                            <children>
+                                <fx:define>
+                                    <ToggleGroup fx:id="paramGroup"/>
+                                </fx:define>
+                                <ToggleButton fx:id="btnUnidades"    text=" Unidades"     onAction="#showUnidades"    selected="true" toggleGroup="$paramGroup"/>
+                                <ToggleButton fx:id="btnCategorias"  text=" Categorías"   onAction="#showCategorias" toggleGroup="$paramGroup"/>
+                                <ToggleButton fx:id="btnMedicamentos" text=" Medicamentos" onAction="#showMedicamentos" toggleGroup="$paramGroup"/>
+                                <ToggleButton fx:id="btnLotes"       text=" Lotes"        onAction="#showLotes" toggleGroup="$paramGroup"/>
+                                <ToggleButton fx:id="btnUbicaciones" text=" Ubicaciones"  onAction="#showUbicaciones" toggleGroup="$paramGroup"/>
+                            </children>
+                        </HBox>
+
+                        <!-- Contenedor de sub-vistas -->
+                        <StackPane fx:id="contentStack" VBox.vgrow="ALWAYS" minHeight="400" />
+                    </children>
+                    <padding><Insets topRightBottomLeft="16"/></padding>
+                </VBox>
+            </content>
+        </ScrollPane>
+    </center>
+</BorderPane>
