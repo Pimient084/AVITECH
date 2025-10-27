@@ -1,0 +1,206 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.chart.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.avitech.sia.iu.oper.ProduccionOperController"
+            prefWidth="1280" prefHeight="800">
+
+    <left>
+        <ScrollPane fitToWidth="true" fitToHeight="true" prefWidth="270" styleClass="side-scroll">
+            <content>
+                <VBox spacing="10" styleClass="sidebar" prefWidth="270" VBox.vgrow="ALWAYS">
+                    <children>
+                        <Label text="Menú Principal" styleClass="sidebar-title"/>
+
+                        <fx:define>
+                            <ToggleGroup fx:id="sideGroup"/>
+                        </fx:define>
+
+                        <ToggleButton text="Tablero"       toggleGroup="$sideGroup" onAction="#goDashboard"  styleClass="side-btn"/>
+                        <ToggleButton text="Suministros"   toggleGroup="$sideGroup" onAction="#goSupplies"   styleClass="side-btn"/>
+                        <ToggleButton text="Sanidad"       toggleGroup="$sideGroup" onAction="#goHealth"     styleClass="side-btn"/>
+                        <ToggleButton text="Producción"    toggleGroup="$sideGroup" onAction="#goProduction" styleClass="side-btn active" selected="true"/>
+                        <!-- Alertas removido para la versión Operador -->
+
+                        <Region VBox.vgrow="ALWAYS"/>
+                        <Label text="Usuario del sistema" styleClass="sidebar-subtitle"/>
+                        <Label fx:id="lblUserInfo" text="Operador" styleClass="sidebar-user"/>
+                        <Button text="Cerrar sesión" onAction="#onExit" styleClass="side-logout"/>
+                    </children>
+                    <padding>
+                        <Insets top="16" right="16" bottom="16" left="16"/>
+                    </padding>
+                </VBox>
+            </content>
+        </ScrollPane>
+    </left>
+
+    <top>
+        <HBox spacing="12" styleClass="topbar">
+            <children>
+                <Label text="AVITECH — SIA" styleClass="topbar-brand"/>
+                <Pane HBox.hgrow="ALWAYS"/>
+                <Label fx:id="lblSystemStatus" text="Sistema Offline – MySQL Local" styleClass="topbar-status"/>
+                <Separator orientation="VERTICAL"/>
+                <Label fx:id="lblHeader" text="Producción — Operador"/>
+                <Button text="↩ Salir" onAction="#onExit" styleClass="ghostBtn"/>
+            </children>
+            <padding><Insets top="10" right="10" bottom="10" left="10"/></padding>
+        </HBox>
+    </top>
+
+    <center>
+        <ScrollPane fitToWidth="true" hbarPolicy="NEVER">
+            <content>
+                <VBox spacing="18" styleClass="content">
+                    <children>
+
+                        <!-- Títulos -->
+                        <Label text="Producción" styleClass="h2"/>
+                        <Label text="Control y seguimiento de la producción de huevos" styleClass="helper"/>
+
+                        <!-- KPIs -->
+                        <HBox spacing="12">
+                            <children>
+
+                                <VBox styleClass="card" prefWidth="280">
+                                    <children>
+                                        <Label text="Producción Total" styleClass="card-title"/>
+                                        <Label fx:id="lblKpiProduccionTotal" text="—" styleClass="card-kpi"/>
+                                        <Label fx:id="lblKpiProdDelta" text="+0%" styleClass="card-delta"/>
+                                    </children>
+                                </VBox>
+
+                                <VBox styleClass="card" prefWidth="280">
+                                    <children>
+                                        <Label text="Promedio Postura" styleClass="card-title"/>
+                                        <Label fx:id="lblKpiPosturaPromedio" text="—" styleClass="card-kpi"/>
+                                        <Label fx:id="lblKpiPosturaDelta" text="+0%" styleClass="card-delta"/>
+                                    </children>
+                                </VBox>
+
+                                <VBox styleClass="card" prefWidth="280">
+                                    <children>
+                                        <Label text="Peso Promedio" styleClass="card-title"/>
+                                        <Label fx:id="lblKpiPesoPromedio" text="—" styleClass="card-kpi"/>
+                                        <Label fx:id="lblKpiPesoDelta" text="+0g" styleClass="card-delta"/>
+                                    </children>
+                                </VBox>
+
+                                <VBox styleClass="card" prefWidth="280">
+                                    <children>
+                                        <Label text="Mortalidad Total" styleClass="card-title"/>
+                                        <Label fx:id="lblKpiMortalidadTotal" text="—" styleClass="card-kpi"/>
+                                        <Label fx:id="lblKpiMortalidadDelta" text="0 aves" styleClass="card-delta bad"/>
+                                    </children>
+                                </VBox>
+
+                            </children>
+                        </HBox>
+
+                        <!-- Filtro por Galpón -->
+                        <VBox styleClass="card">
+                            <children>
+                                <Label text="Filtrar por Galpón" styleClass="card-title"/>
+                                <HBox spacing="10">
+                                    <children>
+                                        <ComboBox fx:id="cbFiltroGalpon" promptText="Todos los galpones" prefWidth="240"/>
+                                        <Button text="Aplicar" onAction="#onFiltrar" styleClass="primary"/>
+                                        <Button text="Limpiar" onAction="#onLimpiarFiltro" styleClass="ghostBtn"/>
+                                    </children>
+                                </HBox>
+                            </children>
+                        </VBox>
+
+                        <!-- Tabla de Registro Diario -->
+                        <VBox styleClass="card">
+                            <children>
+                                <Label text="Registro de Producción Diaria" styleClass="card-title"/>
+                                <TableView fx:id="tblDiario" prefHeight="360">
+                                    <columns>
+                                        <TableColumn fx:id="colGalpon"    text="Galpón"      prefWidth="110"/>
+                                        <TableColumn fx:id="colAves"      text="Aves"        prefWidth="90"/>
+                                        <TableColumn fx:id="colProduccion" text="Producción" prefWidth="120"/>
+                                        <TableColumn fx:id="colPostura"   text="Postura"  prefWidth="120"/>
+                                        <TableColumn fx:id="colPeso"      text="Peso Prom."  prefWidth="110"/>
+                                        <TableColumn fx:id="colClasif"    text="Clasificación" prefWidth="220"/>
+                                        <TableColumn fx:id="colMortalidad" text="Mortalidad" prefWidth="100"/>
+                                    </columns>
+                                </TableView>
+                            </children>
+                        </VBox>
+
+                        <!-- Formulario: Registrar Nueva Producción -->
+                        <VBox styleClass="card">
+                            <children>
+                                <Label text="Registrar Nueva Producción" styleClass="card-title"/>
+
+                                <GridPane hgap="12" vgap="10">
+                                    <columnConstraints>
+                                        <ColumnConstraints prefWidth="170"/>
+                                        <ColumnConstraints prefWidth="210"/>
+                                        <ColumnConstraints prefWidth="170"/>
+                                        <ColumnConstraints prefWidth="210"/>
+                                    </columnConstraints>
+
+                                    <!-- Galpón -->
+                                    <Label text="Galpón" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+                                    <ComboBox fx:id="cbGalpon" promptText="Seleccionar galpón"
+                                              GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+
+                                    <!-- Producción total -->
+                                    <Label text="Producción Total (huevos)" GridPane.rowIndex="0" GridPane.columnIndex="2"/>
+                                    <TextField fx:id="tfProduccionTotal" GridPane.rowIndex="0" GridPane.columnIndex="3"/>
+
+                                    <!-- Peso promedio (g) -->
+                                    <Label text="Peso Promedio (g)" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+                                    <TextField fx:id="tfPesoPromedio" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+
+                                    <!-- Mortalidad (aves) -->
+                                    <Label text="Mortalidad (aves)" GridPane.rowIndex="1" GridPane.columnIndex="2"/>
+                                    <TextField fx:id="tfMortalidad" GridPane.rowIndex="1" GridPane.columnIndex="3"/>
+
+                                    <!-- Clasificación por tamaños -->
+                                    <Label text="Huevos B"  GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+                                    <TextField fx:id="tfHuevosB" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
+
+                                    <Label text="Huevos A"  GridPane.rowIndex="2" GridPane.columnIndex="2"/>
+                                    <TextField fx:id="tfHuevosA" GridPane.rowIndex="2" GridPane.columnIndex="3"/>
+
+                                    <Label text="Huevos AA" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
+                                    <TextField fx:id="tfHuevosAA" GridPane.rowIndex="3" GridPane.columnIndex="1"/>
+
+                                    <Label text="Huevos AAA" GridPane.rowIndex="3" GridPane.columnIndex="2"/>
+                                    <TextField fx:id="tfHuevosAAA" GridPane.rowIndex="3" GridPane.columnIndex="3"/>
+                                </GridPane>
+
+                                <HBox spacing="10" alignment="CENTER_RIGHT">
+                                    <children>
+                                        <Button fx:id="btnCancelarRegistro" text="Cancelar" onAction="#onCancelarRegistro" styleClass="ghostBtn"/>
+                                        <Button fx:id="btnGuardarRegistro"  text="Guardar Registro" onAction="#onGuardarRegistro" styleClass="primary"/>
+                                    </children>
+                                </HBox>
+                            </children>
+                        </VBox>
+
+                        <!-- Acciones rápidas -->
+                        <HBox spacing="10">
+                            <children>
+                                <Button text="Registrar Producción" styleClass="primary" prefWidth="220"/>
+                                <Button text="Gestionar Suministros" styleClass="primary" prefWidth="220"/>
+                                <Button text="Registro Sanitario" styleClass="primary" prefWidth="220"/>
+                                <Button text="Generar Reportes" styleClass="primary" prefWidth="220"/>
+                                <Button fx:id="btnGestionarLotes" text="Gestionar Lotes" styleClass="primary" prefWidth="220" onAction="#onGestionarLotes"/>
+                            </children>
+                        </HBox>
+                    </children>
+                    <padding><Insets topRightBottomLeft="16"/></padding>
+                </VBox>
+            </content>
+        </ScrollPane>
+    </center>
+
+</BorderPane>

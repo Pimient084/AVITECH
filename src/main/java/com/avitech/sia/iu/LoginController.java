@@ -100,7 +100,7 @@ public class LoginController {
                             App.goTo("/fxml/superv/dashboard_super.fxml", "SIA Avitech — SUPERVISOR");
                             break;
                         case "OPERADOR":
-                            App.goTo("/fxml/dashboard_oper.fxml", "SIA Avitech — OPERADOR");
+                            App.goTo("/fxml/oper/dashboard_oper.fxml", "SIA Avitech — OPERADOR");
                             break;
                         default:
                             showError("Rol de usuario no reconocido.");

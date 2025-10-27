@@ -51,7 +51,7 @@
                 <Label fx:id="lblHeader" text="Supervisor"/>
                 <Button text="↩ Salir" onAction="#onExit" styleClass="ghostBtn"/>
             </children>
-            <padding><Insets topRightBottomLeft="10"/></padding>
+            <padding><Insets top="10" right="10" bottom="10" left="10"/></padding>
         </HBox>
     </top>
 
@@ -60,7 +60,7 @@
         <ScrollPane fitToWidth="true" hbarPolicy="NEVER">
             <content>
                 <VBox spacing="18" styleClass="content">
-                    <padding><Insets topRightBottomLeft="16"/></padding>
+                    <padding><Insets top="16" right="16" bottom="16" left="16"/></padding>
                     <children>
 
                         <Label text="Gestión de Usuarios" styleClass="h2"/>

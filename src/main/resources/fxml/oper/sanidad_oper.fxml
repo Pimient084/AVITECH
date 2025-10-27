@@ -1,0 +1,196 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.chart.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.cell.ProgressBarTableCell?>
+
+<BorderPane xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.avitech.sia.iu.oper.SanidadOperController"
+            prefWidth="1280" prefHeight="800">
+
+    <!-- SIDEBAR (igual al dashboard) -->
+    <left>
+        <ScrollPane fitToWidth="true" fitToHeight="true" hbarPolicy="NEVER" prefWidth="270" styleClass="side-scroll">
+            <content>
+                <VBox spacing="10" styleClass="sidebar" prefWidth="270" VBox.vgrow="ALWAYS">
+                    <children>
+                        <Label text="Menú Principal" styleClass="sidebar-title"/>
+
+                        <fx:define><ToggleGroup fx:id="sideGroup"/></fx:define>
+
+                        <ToggleButton text="Tablero"       toggleGroup="$sideGroup" onAction="#goDashboard"  styleClass="side-btn"/>
+                        <ToggleButton text="Suministros"   toggleGroup="$sideGroup" onAction="#goSupplies"   styleClass="side-btn"/>
+                        <ToggleButton text="Sanidad"       toggleGroup="$sideGroup" onAction="#goHealth"     styleClass="side-btn active"/>
+                        <ToggleButton text="Producción"    toggleGroup="$sideGroup" onAction="#goProduction" styleClass="side-btn"/>
+                        <!-- Alertas removido para la versión Operador -->
+
+                        <Region VBox.vgrow="ALWAYS"/>
+                        <Label text="Usuario del sistema" styleClass="sidebar-subtitle"/>
+                        <Label fx:id="lblUserInfo" text="Operador" styleClass="sidebar-user"/>
+                        <Button text="Cerrar sesión" onAction="#onExit" styleClass="side-logout"/>
+                    </children>
+                    <padding><Insets top="16" right="16" bottom="16" left="16"/></padding>
+                </VBox>
+            </content>
+        </ScrollPane>
+    </left>
+
+    <!-- TOP BAR -->
+    <top>
+        <HBox spacing="12" styleClass="topbar">
+            <children>
+                <Label text="AVITECH — SIA" styleClass="topbar-brand"/>
+                <Pane HBox.hgrow="ALWAYS"/>
+                <Label fx:id="lblSystemStatus" text="Sistema Offline – MySQL Local" styleClass="topbar-status"/>
+                <Separator orientation="VERTICAL"/>
+                <Label fx:id="lblHeader" text="Sanidad — Operador"/>
+                <Button text="↩ Salir" onAction="#onExit" styleClass="ghostBtn"/>
+            </children>
+            <padding><Insets top="10" right="10" bottom="10" left="10"/></padding>
+        </HBox>
+    </top>
+
+    <!-- CONTENIDO -->
+    <center>
+        <ScrollPane fitToWidth="true" hbarPolicy="NEVER">
+            <content>
+                <VBox spacing="18" styleClass="content">
+                    <children>
+                        <HBox alignment="CENTER_LEFT" spacing="12">
+                            <children>
+                                <Label text="Control Sanitario" styleClass="h2"/>
+                                <Label text="Gestión integral de salud, medicamentos y eventos sanitarios" styleClass="helper"/>
+                                <Pane HBox.hgrow="ALWAYS"/>
+                                <Button text="Registrar Aplicación"
+                                        fx:id="btnRegistrarAplicacion"
+                                        onAction="#onRegistrarAplicacion"
+                                        />
+                                <Button text="Registrar Evento"
+                                        fx:id="btnRegistrarEvento"
+                                        onAction="#onRegistrarEvento"
+                                        />
+                                <Button text="Registrar Medicamento"
+                                        fx:id="btnRegistrarMedicamento"
+                                        onAction="#onRegistrarMedicamento"
+                                        />
+                            </children>
+                        </HBox>
+
+                        <!-- KPIs -->
+                        <HBox spacing="12">
+                            <children>
+                                <VBox styleClass="card" prefWidth="260">
+                                    <children>
+                                        <Label text="Aplicaciones (Mes)" styleClass="card-title"/>
+                                        <Label fx:id="kpiAplicaciones" text="0" styleClass="card-kpi"/>
+                                        <Label fx:id="kpiAplicacionesDelta" text="0 completados" styleClass="card-delta"/>
+                                    </children>
+                                </VBox>
+
+                                <VBox styleClass="card" prefWidth="260">
+                                    <children>
+                                        <Label text="Mortalidad (Mes)" styleClass="card-title"/>
+                                        <Label fx:id="kpiMortalidad" text="0" styleClass="card-kpi"/>
+                                        <Label text="aves afectadas" styleClass="card-delta"/>
+                                    </children>
+                                </VBox>
+
+                                <VBox styleClass="card" prefWidth="260">
+                                    <children>
+                                        <Label text="Enfermedades Activas" styleClass="card-title"/>
+                                        <Label fx:id="kpiCasosActivos" text="0" styleClass="card-kpi"/>
+                                        <Label text="casos activos" styleClass="card-delta"/>
+                                    </children>
+                                </VBox>
+
+                                <VBox styleClass="card" prefWidth="260">
+                                    <children>
+                                        <Label text="Stock Medicamentos" styleClass="card-title"/>
+                                        <Label fx:id="kpiMedStock" text="0" styleClass="card-kpi"/>
+                                        <Label fx:id="kpiMedBajos" text="0 bajos" styleClass="card-delta bad"/>
+                                    </children>
+                                </VBox>
+                            </children>
+                        </HBox>
+
+                        <!-- Planes + Estado de Medicamentos -->
+                        <HBox spacing="12">
+                            <children>
+                                <VBox styleClass="card" prefWidth="630" VBox.vgrow="ALWAYS">
+                                    <children>
+                                        <Label text="Plan Sanitario y Catálogo de Medicamentos" styleClass="card-title"/>
+                                        <Label text="Consulte protocolos recomendados y disponibilidad de medicamentos" styleClass="helper"/>
+                                        <TableView fx:id="tblPlanes" prefHeight="260" VBox.vgrow="ALWAYS">
+                                            <columns>
+                                                <TableColumn fx:id="colPlan"  text="Plan / Programa" prefWidth="250"/>
+                                                <TableColumn fx:id="colDesc"  text="Descripción"     prefWidth="240"/>
+                                                <TableColumn fx:id="colEdad"  text="Edad / Frecuencia" prefWidth="130"/>
+                                                <TableColumn fx:id="colEstadoPlan" text="Estado" prefWidth="90"/>
+                                            </columns>
+                                        </TableView>
+                                    </children>
+                                </VBox>
+
+                                <VBox styleClass="card" prefWidth="420">
+                                    <children>
+                                        <Label text="Estado de Medicamentos" styleClass="card-title"/>
+                                        <TableView fx:id="tblMedicamentos" prefHeight="260">
+                                            <columns>
+                                                <TableColumn fx:id="colMed"   text="Medicamento" prefWidth="190"/>
+                                                <TableColumn fx:id="colStock" text="Stock"       prefWidth="80"/>
+                                                <TableColumn fx:id="colBar"   text="Nivel"       prefWidth="120"/>
+                                                <TableColumn fx:id="colInv"   text="Inventario"  prefWidth="90"/>
+                                            </columns>
+                                        </TableView>
+                                    </children>
+                                </VBox>
+                            </children>
+                        </HBox>
+
+                        <!-- Filtros -->
+                        <VBox styleClass="card">
+                            <children>
+                                <Label text="Filtros de Búsqueda" styleClass="card-title"/>
+                                <GridPane hgap="10" vgap="10">
+                                    <columnConstraints>
+                                        <ColumnConstraints prefWidth="220"/>
+                                        <ColumnConstraints prefWidth="180"/>
+                                        <ColumnConstraints prefWidth="220"/>
+                                        <ColumnConstraints prefWidth="160"/>
+                                        <ColumnConstraints prefWidth="160"/>
+                                        <ColumnConstraints hgrow="ALWAYS"/>
+                                    </columnConstraints>
+
+                                    <Label text="Buscar" GridPane.rowIndex="0" GridPane.columnIndex="0" styleClass="input-label"/>
+                                    <TextField fx:id="txtBuscar" promptText="Evento, lote, galpón…" GridPane.rowIndex="1" GridPane.columnIndex="0" styleClass="input"/>
+
+                                    <Label text="Lote/Galpón" GridPane.rowIndex="0" GridPane.columnIndex="1" styleClass="input-label"/>
+                                    <ComboBox fx:id="cbGalpon" promptText="Todos" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+
+                                    <Label text="Medicamento" GridPane.rowIndex="0" GridPane.columnIndex="2" styleClass="input-label"/>
+                                    <ComboBox fx:id="cbMedicamento" promptText="Todos" GridPane.rowIndex="1" GridPane.columnIndex="2"/>
+
+                                    <Label text="Fecha Desde" GridPane.rowIndex="0" GridPane.columnIndex="3" styleClass="input-label"/>
+                                    <DatePicker fx:id="dpDesde" GridPane.rowIndex="1" GridPane.columnIndex="3"/>
+
+                                    <Label text="Fecha Hasta" GridPane.rowIndex="0" GridPane.columnIndex="4" styleClass="input-label"/>
+                                    <DatePicker fx:id="dpHasta" GridPane.rowIndex="1" GridPane.columnIndex="4"/>
+
+                                    <HBox spacing="8" alignment="CENTER_RIGHT" GridPane.rowIndex="1" GridPane.columnIndex="5">
+                                        <children>
+                                            <Button text="Buscar"   onAction="#onBuscar"   styleClass="primary"/>
+                                            <Button text="Limpiar"  onAction="#onLimpiar"  styleClass="secondary"/>
+                                        </children>
+                                    </HBox>
+                                </GridPane>
+                            </children>
+                        </VBox>
+                    </children>
+                    <padding><Insets top="16" right="16" bottom="16" left="16"/></padding>
+                </VBox>
+            </content>
+        </ScrollPane>
+    </center>
+
+</BorderPane>
