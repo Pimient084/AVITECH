@@ -5,6 +5,7 @@ import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
+import org.apache.pdfbox.pdmodel.font.PDFont;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
 
 import java.io.IOException;
@@ -26,6 +27,14 @@ public class PdfReportService {
     private static final float HEADER_BLOCK_HEIGHT = 60f; // distancia desde el tope (y - MARGIN) hasta la línea inferior del encabezado
     private static final float GAP_AFTER_HEADER = 24f; // dos líneas de ~12pt
     private static final float ROW_TEXT_BASELINE_OFFSET = 12f; // drawRow posiciona el texto en y - 12
+
+    // Tipografía y métricas
+    private static final PDFont FONT = PDType1Font.HELVETICA;
+    private static final PDFont FONT_BOLD = PDType1Font.HELVETICA_BOLD;
+    private static final float FONT_SIZE = 9f;
+    private static final float FONT_SIZE_HEADER = 10f;
+    private static final float LINE_HEIGHT = 12f; // altura por línea de texto
+    private static final float ROW_V_PADDING = 4f; // padding vertical dentro de la celda
 
     public Path generate(ReportRequest req) throws Exception {
         Objects.requireNonNull(req, "ReportRequest no debe ser null");
@@ -112,7 +121,29 @@ public class PdfReportService {
         return headerLineY - GAP_AFTER_HEADER + ROW_TEXT_BASELINE_OFFSET;
     }
 
-    // =============== SANIDAD: Lista de medicamentos (nombre, presentación, stock, mínimo) ===============
+    private float[] scaleToWidth(PDRectangle mediaBox, float[] raw) {
+        float available = mediaBox.getWidth() - 2 * MARGIN;
+        float sum = 0f; for (float v : raw) sum += v;
+        if (sum <= 0) return raw;
+        float factor = available / sum;
+        float[] out = new float[raw.length];
+        for (int i = 0; i < raw.length; i++) out[i] = raw[i] * factor;
+        return out;
+    }
+
+    private float computeRowHeight(String[] cells, float[] colWidths, boolean header) throws IOException {
+        float maxLines = 1f;
+        PDFont f = header ? FONT_BOLD : FONT;
+        float fs = header ? FONT_SIZE_HEADER : FONT_SIZE;
+        for (int i = 0; i < colWidths.length; i++) {
+            String text = i < cells.length ? sanitize(nz(cells[i])) : "";
+            List<String> lines = wrapText(text, f, fs, colWidths[i] - 8 /*padding horizontal aprox*/);
+            if (lines.size() > maxLines) maxLines = lines.size();
+        }
+        return ROW_V_PADDING * 2 + maxLines * LINE_HEIGHT;
+    }
+
+    // =============== SANIDAD ===============
     private void buildSanidad(PDDocument doc, ReportRequest req) throws Exception {
         MedicamentoDAO medDao = new MedicamentoDAO();
         List<Medicamento> meds;
@@ -125,16 +156,24 @@ public class PdfReportService {
             buildHeader(cs, page.getMediaBox(), "Reporte — Sanidad (Medicamentos)", req);
             float margin = MARGIN;
             float y = tableStartY(page);
-            float[] colWidths = {300, 200, 100, 100};
+            float[] colWidths = scaleToWidth(page.getMediaBox(), new float[]{300, 200, 100, 100});
             y = drawRow(cs, margin, y, colWidths, new String[]{"Nombre", "Presentación", "Stock", "Mínimo"}, true);
             for (Medicamento m : meds) {
-                if (y < 80) { cs.close(); page = new PDPage(PAGE_SIZE); doc.addPage(page); cs = new PDPageContentStream(doc, page); buildHeader(cs, page.getMediaBox(), "Reporte — Sanidad (Medicamentos)", req); y = tableStartY(page); y = drawRow(cs, margin, y, colWidths, new String[]{"Nombre", "Presentación", "Stock", "Mínimo"}, true); }
-                y = drawRow(cs, margin, y, colWidths, new String[]{ nz(m.getNombre()), nz(m.getPresentacion()), String.valueOf(m.getStock()), String.valueOf(m.getStockMinimo()) }, false);
+                String[] cells = new String[]{ nz(m.getNombre()), nz(m.getPresentacion()), String.valueOf(m.getStock()), String.valueOf(m.getStockMinimo()) };
+                float nextH = computeRowHeight(cells, colWidths, false);
+                if (y - nextH < MARGIN + 20) {
+                    cs.close(); page = new PDPage(PAGE_SIZE); doc.addPage(page); cs = new PDPageContentStream(doc, page);
+                    buildHeader(cs, page.getMediaBox(), "Reporte — Sanidad (Medicamentos)", req);
+                    y = tableStartY(page);
+                    colWidths = scaleToWidth(page.getMediaBox(), new float[]{300, 200, 100, 100});
+                    y = drawRow(cs, margin, y, colWidths, new String[]{"Nombre", "Presentación", "Stock", "Mínimo"}, true);
+                }
+                y = drawRow(cs, margin, y, colWidths, cells, false);
             }
         } finally { cs.close(); }
     }
 
-    // =============== PRODUCCION: Lista de producción (fecha, galpón, total, L, M, S, mort, resp) ===============
+    // =============== PRODUCCION ===============
     private void buildProduccion(PDDocument doc, ReportRequest req) throws Exception {
         ProduccionDAO prodDao = new ProduccionDAO();
         List<Produccion> all;
@@ -147,20 +186,28 @@ public class PdfReportService {
             buildHeader(cs, page.getMediaBox(), "Reporte — Producción de Huevos", req);
             float margin = MARGIN;
             float y = tableStartY(page);
-            float[] colWidths = {120, 90, 90, 60, 60, 60, 80, 200};
+            float[] colWidths = scaleToWidth(page.getMediaBox(), new float[]{120, 90, 90, 60, 60, 60, 80, 200});
             y = drawRow(cs, margin, y, colWidths, new String[]{"Fecha", "Galpón", "Total", "L", "M", "S", "Mort.", "Responsable"}, true);
             for (Produccion p : all) {
-                if (y < 80) { cs.close(); page = new PDPage(PAGE_SIZE); doc.addPage(page); cs = new PDPageContentStream(doc, page); buildHeader(cs, page.getMediaBox(), "Reporte — Producción de Huevos", req); y = tableStartY(page); y = drawRow(cs, margin, y, colWidths, new String[]{"Fecha", "Galpón", "Total", "L", "M", "S", "Mort.", "Responsable"}, true); }
-                y = drawRow(cs, margin, y, colWidths, new String[]{
+                String[] cells = new String[]{
                         p.getFecha().toString(), String.valueOf(p.getGalpon()), String.valueOf(p.getTotalHuevos()),
                         String.valueOf(p.getHuevosL()), String.valueOf(p.getHuevosM()), String.valueOf(p.getHuevosS()),
                         String.valueOf(p.getMortalidad()), nz(p.getResponsable())
-                }, false);
+                };
+                float nextH = computeRowHeight(cells, colWidths, false);
+                if (y - nextH < MARGIN + 20) {
+                    cs.close(); page = new PDPage(PAGE_SIZE); doc.addPage(page); cs = new PDPageContentStream(doc, page);
+                    buildHeader(cs, page.getMediaBox(), "Reporte — Producción de Huevos", req);
+                    y = tableStartY(page);
+                    colWidths = scaleToWidth(page.getMediaBox(), new float[]{120, 90, 90, 60, 60, 60, 80, 200});
+                    y = drawRow(cs, margin, y, colWidths, new String[]{"Fecha", "Galpón", "Total", "L", "M", "S", "Mort.", "Responsable"}, true);
+                }
+                y = drawRow(cs, margin, y, colWidths, cells, false);
             }
         } finally { cs.close(); }
     }
 
-    // =============== ALERTAS: descripciones recientes ===============
+    // =============== ALERTAS ===============
     private void buildAlertas(PDDocument doc, ReportRequest req) throws Exception {
         AlertaDAO alertaDAO = new AlertaDAO();
         List<String> desc;
@@ -173,16 +220,24 @@ public class PdfReportService {
             buildHeader(cs, page.getMediaBox(), "Reporte — Alertas Recientes", req);
             float margin = MARGIN;
             float y = tableStartY(page);
-            float[] colWidths = {720};
+            float[] colWidths = scaleToWidth(page.getMediaBox(), new float[]{720});
             y = drawRow(cs, margin, y, colWidths, new String[]{"Descripción"}, true);
             for (String d : desc) {
-                if (y < 80) { cs.close(); page = new PDPage(PAGE_SIZE); doc.addPage(page); cs = new PDPageContentStream(doc, page); buildHeader(cs, page.getMediaBox(), "Reporte — Alertas Recientes", req); y = tableStartY(page); y = drawRow(cs, margin, y, colWidths, new String[]{"Descripción"}, true); }
-                y = drawRow(cs, margin, y, colWidths, new String[]{ nz(d) }, false);
+                String[] cells = new String[]{ nz(d) };
+                float nextH = computeRowHeight(cells, colWidths, false);
+                if (y - nextH < MARGIN + 20) {
+                    cs.close(); page = new PDPage(PAGE_SIZE); doc.addPage(page); cs = new PDPageContentStream(doc, page);
+                    buildHeader(cs, page.getMediaBox(), "Reporte — Alertas Recientes", req);
+                    y = tableStartY(page);
+                    colWidths = scaleToWidth(page.getMediaBox(), new float[]{720});
+                    y = drawRow(cs, margin, y, colWidths, new String[]{"Descripción"}, true);
+                }
+                y = drawRow(cs, margin, y, colWidths, cells, false);
             }
         } finally { cs.close(); }
     }
 
-    // =============== AUDITORIA: lista de auditoría (fecha, usuarioId, acción, módulo, detalle) ===============
+    // =============== AUDITORIA ===============
     private void buildAuditoria(PDDocument doc, ReportRequest req) throws Exception {
         AuditoriaDAO audDao = new AuditoriaDAO();
         List<AuditoriaDAO.AuditoriaRecord> rows;
@@ -195,18 +250,26 @@ public class PdfReportService {
             buildHeader(cs, page.getMediaBox(), "Reporte — Auditoría", req);
             float margin = MARGIN;
             float y = tableStartY(page);
-            float[] colWidths = {180, 100, 120, 120, 240};
+            float[] colWidths = scaleToWidth(page.getMediaBox(), new float[]{180, 100, 120, 120, 240});
             y = drawRow(cs, margin, y, colWidths, new String[]{"Fecha", "Id User", "Acción", "Módulo", "Detalle"}, true);
             for (AuditoriaDAO.AuditoriaRecord r : rows) {
-                if (y < 80) { cs.close(); page = new PDPage(PAGE_SIZE); doc.addPage(page); cs = new PDPageContentStream(doc, page); buildHeader(cs, page.getMediaBox(), "Reporte — Auditoría", req); y = tableStartY(page); y = drawRow(cs, margin, y, colWidths, new String[]{"Fecha", "Id User", "Acción", "Módulo", "Detalle"}, true); }
-                y = drawRow(cs, margin, y, colWidths, new String[]{
-                        r.fecha().toString(), String.valueOf(r.idUsuario()), nz(r.accion()), nz(r.modulo()), trimTo(nz(r.detalle()), 80)
-                }, false);
+                String[] cells = new String[]{
+                        r.fecha().toString(), String.valueOf(r.idUsuario()), nz(r.accion()), nz(r.modulo()), nz(r.detalle())
+                };
+                float nextH = computeRowHeight(cells, colWidths, false);
+                if (y - nextH < MARGIN + 20) {
+                    cs.close(); page = new PDPage(PAGE_SIZE); doc.addPage(page); cs = new PDPageContentStream(doc, page);
+                    buildHeader(cs, page.getMediaBox(), "Reporte — Auditoría", req);
+                    y = tableStartY(page);
+                    colWidths = scaleToWidth(page.getMediaBox(), new float[]{180, 100, 120, 120, 240});
+                    y = drawRow(cs, margin, y, colWidths, new String[]{"Fecha", "Id User", "Acción", "Módulo", "Detalle"}, true);
+                }
+                y = drawRow(cs, margin, y, colWidths, cells, false);
             }
         } finally { cs.close(); }
     }
 
-    // =============== USUARIOS: lista de usuarios (usuario, rol, email, tel, dir) ===============
+    // =============== USUARIOS ===============
     private void buildUsuarios(PDDocument doc, ReportRequest req) throws Exception {
         UsuarioDAO udao = new UsuarioDAO();
         List<UsuarioDAO.Usuario> rows;
@@ -219,28 +282,50 @@ public class PdfReportService {
             buildHeader(cs, page.getMediaBox(), "Reporte — Usuarios", req);
             float margin = MARGIN;
             float y = tableStartY(page);
-            float[] colWidths = {200, 130, 220, 120, 260};
+            float[] colWidths = scaleToWidth(page.getMediaBox(), new float[]{200, 130, 220, 120, 260});
             y = drawRow(cs, margin, y, colWidths, new String[]{"Usuario", "Rol", "Email", "Teléfono", "Dirección"}, true);
             for (UsuarioDAO.Usuario u : rows) {
-                if (y < 80) { cs.close(); page = new PDPage(PAGE_SIZE); doc.addPage(page); cs = new PDPageContentStream(doc, page); buildHeader(cs, page.getMediaBox(), "Reporte — Usuarios", req); y = tableStartY(page); y = drawRow(cs, margin, y, colWidths, new String[]{"Usuario", "Rol", "Email", "Teléfono", "Dirección"}, true); }
-                y = drawRow(cs, margin, y, colWidths, new String[]{
-                        nz(u.usuario()), nz(u.rol()), nz(u.email()), nz(u.telefono()), trimTo(nz(u.direccion()), 80)
-                }, false);
+                String[] cells = new String[]{ nz(u.usuario()), nz(u.rol()), nz(u.email()), nz(u.telefono()), nz(u.direccion()) };
+                float nextH = computeRowHeight(cells, colWidths, false);
+                if (y - nextH < MARGIN + 20) {
+                    cs.close(); page = new PDPage(PAGE_SIZE); doc.addPage(page); cs = new PDPageContentStream(doc, page);
+                    buildHeader(cs, page.getMediaBox(), "Reporte — Usuarios", req);
+                    y = tableStartY(page);
+                    colWidths = scaleToWidth(page.getMediaBox(), new float[]{200, 130, 220, 120, 260});
+                    y = drawRow(cs, margin, y, colWidths, new String[]{"Usuario", "Rol", "Email", "Teléfono", "Dirección"}, true);
+                }
+                y = drawRow(cs, margin, y, colWidths, cells, false);
             }
         } finally { cs.close(); }
     }
 
     private float drawRow(PDPageContentStream cs, float x, float y, float[] colWidths, String[] cells, boolean header) throws IOException {
-        float height = 18f; // altura estándar de fila
+        PDFont f = header ? FONT_BOLD : FONT;
+        float fs = header ? FONT_SIZE_HEADER : FONT_SIZE;
+
+        // Precalcular envolturas y altura
+        List<List<String>> wrapped = new ArrayList<>();
+        int maxLines = 1;
+        for (int i = 0; i < colWidths.length; i++) {
+            String text = i < cells.length ? sanitize(nz(cells[i])) : "";
+            List<String> lines = wrapText(text, f, fs, colWidths[i] - 8);
+            wrapped.add(lines);
+            if (lines.size() > maxLines) maxLines = lines.size();
+        }
+        float height = ROW_V_PADDING * 2 + maxLines * LINE_HEIGHT;
+
         float cx = x;
         for (int i = 0; i < colWidths.length; i++) {
-            String text = i < cells.length ? (cells[i] == null ? "" : cells[i]) : "";
-            String prepared = trimTo(sanitize(text), (int) colWidths[i] / 6);
-            cs.beginText();
-            cs.setFont(header ? PDType1Font.HELVETICA_BOLD : PDType1Font.HELVETICA, header ? 10 : 9);
-            cs.newLineAtOffset(cx + 4, y - ROW_TEXT_BASELINE_OFFSET);
-            cs.showText(prepared);
-            cs.endText();
+            List<String> lines = wrapped.get(i);
+            // Dibujar cada línea en la celda
+            float textY = y - ROW_TEXT_BASELINE_OFFSET - ROW_V_PADDING;
+            for (int li = 0; li < lines.size(); li++) {
+                cs.beginText();
+                cs.setFont(f, fs);
+                cs.newLineAtOffset(cx + 4, textY - li * LINE_HEIGHT);
+                cs.showText(lines.get(li));
+                cs.endText();
+            }
             cx += colWidths[i];
         }
         // Línea inferior de la fila
@@ -248,6 +333,51 @@ public class PdfReportService {
         cs.lineTo(x + sum(colWidths), y - height);
         cs.stroke();
         return y - height;
+    }
+
+    private List<String> wrapText(String text, PDFont font, float fontSize, float maxWidth) throws IOException {
+        List<String> lines = new ArrayList<>();
+        if (text == null || text.isEmpty()) { lines.add(""); return lines; }
+        String[] words = text.split("\\s+");
+        StringBuilder current = new StringBuilder();
+        for (String w : words) {
+            if (w.isEmpty()) continue;
+            String candidate = current.length() == 0 ? w : current + " " + w;
+            if (stringWidth(candidate, font, fontSize) <= maxWidth) {
+                current.setLength(0); current.append(candidate);
+            } else {
+                if (current.length() > 0) { lines.add(current.toString()); current.setLength(0); }
+                // Si la palabra sola no cabe, partirla
+                if (stringWidth(w, font, fontSize) <= maxWidth) {
+                    current.append(w);
+                } else {
+                    // Partir por caracteres
+                    String remaining = w;
+                    while (!remaining.isEmpty()) {
+                        int cut = pickFittingPrefix(remaining, font, fontSize, maxWidth);
+                        lines.add(remaining.substring(0, cut));
+                        remaining = remaining.substring(cut);
+                    }
+                }
+            }
+        }
+        if (current.length() > 0) lines.add(current.toString());
+        return lines;
+    }
+
+    private int pickFittingPrefix(String s, PDFont font, float fontSize, float maxWidth) throws IOException {
+        int lo = 1, hi = s.length(), best = 1;
+        while (lo <= hi) {
+            int mid = (lo + hi) >>> 1;
+            float w = stringWidth(s.substring(0, mid), font, fontSize);
+            if (w <= maxWidth) { best = mid; lo = mid + 1; }
+            else hi = mid - 1;
+        }
+        return Math.max(1, best);
+    }
+
+    private float stringWidth(String s, PDFont font, float fontSize) throws IOException {
+        return font.getStringWidth(s) / 1000f * fontSize;
     }
 
     private String sanitize(String s) {

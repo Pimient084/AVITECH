@@ -27,7 +27,7 @@ public class ReportesSupervisorController {
     @FXML private ComboBox<String> cbLote, cbArticulo, cbCategoria, cbResponsable;
 
     // Export/preview
-    @FXML private RadioButton rbPdf, rbExcel;
+    @FXML private RadioButton rbPdf; // rbExcel eliminado
     @FXML private CheckBox chkPreview;
     @FXML private Label lblInfoFiltros;
     @FXML private Button btnGenerar;
@@ -77,7 +77,8 @@ public class ReportesSupervisorController {
             PdfReportService service = new PdfReportService();
             Path file = service.generate(req);
 
-            if (chkPreview.isSelected() && Desktop.isDesktopSupported()) {
+            // Abrir el PDF solo si Vista Previa está activado; si no, mostrar mensaje con la ruta
+            if (chkPreview.isSelected() && Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.OPEN)) {
                 Desktop.getDesktop().open(file.toFile());
             } else {
                 Alert ok = new Alert(Alert.AlertType.INFORMATION, "Reporte generado: " + file.toAbsolutePath());
@@ -105,7 +106,7 @@ public class ReportesSupervisorController {
         lblInfoFiltros.setText("Filtros aplicados: —");
         if (cbTipoReporte != null) cbTipoReporte.getSelectionModel().select(tipoToText(selectedType));
     }
-    @FXML private void onExportarExcel() { /* ignorado: solo PDF */ }
+    @FXML private void onExportarExcel() { /* eliminado funcionalmente: solo PDF */ }
 
     /* ============ Selección de tipo de reporte (tarjetas) ============ */
     @FXML private void selSanidad()   { setType(ReportType.SANIDAD,    "Tipo seleccionado: Sanidad"); }
@@ -174,7 +175,7 @@ public class ReportesSupervisorController {
         // KPI demo
         lblKpiMes.setText("47");
         lblMasSolicitado.setText("Producción");
-        lblFormatos.setText("PDF / Excel");
+        lblFormatos.setText("PDF");
         lblTPromedio.setText("2.1 min");
         pbInv.setProgress(0.45);
         pbProd.setProgress(0.30);

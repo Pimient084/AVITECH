@@ -65,15 +65,11 @@
                 <VBox spacing="18" styleClass="content">
                     <padding><Insets topRightBottomLeft="16"/></padding>
 
-                    <!-- Título + acción principal -->
+                    <!-- Título (se removieron controles que se moverán abajo) -->
                     <HBox alignment="CENTER_LEFT" spacing="12">
                         <children>
                             <Label text="Generación de Reportes" styleClass="h2"/>
                             <Pane HBox.hgrow="ALWAYS"/>
-                            <Label text="Tipo:"/>
-                            <ComboBox fx:id="cbTipoReporte" prefWidth="220" promptText="Seleccione tipo"/>
-                            <Button fx:id="btnGenerar" text="🧾 Generar Reporte" styleClass="primary" onAction="#onGenerar"/>
-                            <Button text="Limpiar" onAction="#onLimpiar" styleClass="secondary"/>
                         </children>
                     </HBox>
 
@@ -176,12 +172,15 @@
 
                                     <!-- ahora cada RadioButton usa el grupo definido -->
                                     <RadioButton fx:id="rbPdf"   text="PDF"   selected="true" toggleGroup="$formatGroup"/>
-                                    <RadioButton fx:id="rbExcel" text="Excel"              toggleGroup="$formatGroup"/>
 
                                     <Separator orientation="VERTICAL"/>
                                     <CheckBox fx:id="chkPreview" text="Vista Previa"/>
                                     <Pane HBox.hgrow="ALWAYS"/>
-                                    <Button text="📤 Exportar a Excel" onAction="#onExportarExcel" styleClass="secondary"/>
+                                    <!-- En lugar del botón de exportar, bajar controles de tipo y acciones -->
+                                    <Label text="Tipo:"/>
+                                    <ComboBox fx:id="cbTipoReporte" prefWidth="220" promptText="Seleccione tipo"/>
+                                    <Button fx:id="btnGenerar" text="🧾 Generar Reporte" styleClass="primary" onAction="#onGenerar"/>
+                                    <Button text="Limpiar" onAction="#onLimpiar" styleClass="secondary"/>
                                 </children>
                             </HBox>
 
@@ -228,7 +227,7 @@
                                         <Label fx:id="lblMasSolicitado" text="—" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
 
                                         <Label text="Formatos Populares" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
-                                        <Label fx:id="lblFormatos" text="PDF / Excel" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
+                                        <Label fx:id="lblFormatos" text="PDF" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
 
                                         <Label text="Tiempo Promedio" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
                                         <Label fx:id="lblTPromedio" text="—" GridPane.rowIndex="3" GridPane.columnIndex="1"/>
