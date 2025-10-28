@@ -65,14 +65,17 @@
                                 <Button text="Registrar Aplicación"
                                         fx:id="btnRegistrarAplicacion"
                                         onAction="#onRegistrarAplicacion"
+                                        styleClass="primary"
                                         />
-                                <Button text="Registrar Evento"
+                                <Button text="🦠 Registrar Evento"
                                         fx:id="btnRegistrarEvento"
                                         onAction="#onRegistrarEvento"
+                                        styleClass="primary"
                                         />
-                                <Button text="Registrar Medicamento"
+                                <Button text="💊 Registrar Medicamento"
                                         fx:id="btnRegistrarMedicamento"
                                         onAction="#onRegistrarMedicamento"
+                                        styleClass="primary"
                                         />
                             </children>
                         </HBox>
@@ -122,6 +125,9 @@
                                     <children>
                                         <Label text="Plan Sanitario y Catálogo de Medicamentos" styleClass="card-title"/>
                                         <Label text="Consulte protocolos recomendados y disponibilidad de medicamentos" styleClass="helper"/>
+                                        <HBox alignment="CENTER_RIGHT" spacing="8" translateY="-25">
+                                            <Button text="➕ Agregar Plan Sanitario" onAction="#onAgregarPlanSanitario" styleClass="primary"/>
+                                        </HBox>
                                         <TableView fx:id="tblPlanes" prefHeight="260" VBox.vgrow="ALWAYS">
                                             <columns>
                                                 <TableColumn fx:id="colPlan"  text="Plan / Programa" prefWidth="250"/>

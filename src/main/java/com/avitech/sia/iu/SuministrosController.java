@@ -4,6 +4,8 @@ import com.avitech.sia.App;
 import com.avitech.sia.db.Suministro;
 import com.avitech.sia.db.SuministroDAO;
 import com.avitech.sia.db.UsuarioDAO;
+import com.avitech.sia.db.StockProduccion;
+import com.avitech.sia.db.StockRepository;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -15,17 +17,23 @@ import javafx.scene.layout.Pane;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 
-import java.io.IOException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.math.BigDecimal;
 import java.text.NumberFormat;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.LinkedList;
 import java.util.Locale;
 import java.util.stream.Collectors;
 
 /** Controlador de Suministros conectado a la base de datos. */
+@SuppressWarnings("unused")
 public class SuministrosController {
+
+    private static final Logger logger = LoggerFactory.getLogger(SuministrosController.class);
 
     /* topbar / sidebar */
     @FXML private Label lblSystemStatus;
@@ -50,6 +58,8 @@ public class SuministrosController {
 
     private final SuministroDAO suministroDAO = new SuministroDAO();
     private final UsuarioDAO usuarioDAO = new UsuarioDAO();
+    // Repositorio para consultar stock en producción
+    private final StockRepository stockRepository = new StockRepository();
     private final ObservableList<Mov> master = FXCollections.observableArrayList();
     private final ObservableList<Mov> filtered = FXCollections.observableArrayList();
 
@@ -103,14 +113,13 @@ public class SuministrosController {
             );
 
             // Actualizar combo de responsables dinámicamente
-            List<String> responsables = usuarioDAO.getAllNombres();
-            responsables.add(0, "Todos");
+            LinkedList<String> responsables = new LinkedList<>(usuarioDAO.getAllNombres());
+            responsables.addFirst("Todos");
             cbResp.setItems(FXCollections.observableArrayList(responsables));
             cbResp.getSelectionModel().selectFirst();
 
         } catch (Exception e) {
-            // En una app real, usar un logger y un diálogo de error más elegante
-            e.printStackTrace();
+            logger.error("Error al cargar los suministros", e);
             new Alert(Alert.AlertType.ERROR, "Error al cargar los suministros: " + e.getMessage()).showAndWait();
         }
     }
@@ -158,7 +167,7 @@ public class SuministrosController {
                 refreshKpis();
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("Error al abrir el diálogo de entrada", e);
             new Alert(Alert.AlertType.ERROR, "Error al abrir el diálogo de entrada: " + e.getMessage()).showAndWait();
         }
     }
@@ -191,12 +200,39 @@ public class SuministrosController {
                 refreshKpis();
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("Error al abrir el diálogo de salida", e);
             new Alert(Alert.AlertType.ERROR, "Error al abrir el diálogo de salida: " + e.getMessage()).showAndWait();
         }
     }
 
-    @FXML private void onVerStock()  { /* ir al inventario    */ }
+    @FXML
+    private void onVerStock()  {
+        try {
+            // Mostrar únicamente el stock calculado a partir de movimientos de suministros
+            List<StockProduccion> stock = stockRepository.getStockSuministros();
+
+            FXMLLoader loader = new FXMLLoader(App.class.getResource("/fxml/modal_stock_produccion.fxml"));
+            Pane page = loader.load();
+
+            StockProduccionController controller = loader.getController();
+            controller.setStock(stock);
+            // Ajustar el título del encabezado dentro del modal
+            controller.setTitle("Stock de Suministros");
+
+            Stage dialog = new Stage();
+            dialog.initModality(Modality.WINDOW_MODAL);
+            if (btnEntrada != null && btnEntrada.getScene() != null) {
+                dialog.initOwner(btnEntrada.getScene().getWindow());
+            }
+            dialog.setTitle("Stock de Suministros");
+            dialog.setScene(new Scene(page));
+            dialog.showAndWait();
+
+        } catch (Exception e) {
+            logger.error("Error al cargar stock en producción", e);
+            new Alert(Alert.AlertType.ERROR, "Error al cargar stock en producción: " + e.getMessage()).showAndWait();
+        }
+    }
     @FXML private void onMoverStock(){ /* flujo mover stock   */ }
     @FXML private void onExportar()  { /* export CSV/XLSX     */ }
 
@@ -251,7 +287,8 @@ public class SuministrosController {
                 .map(m -> m.valorTotal)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        NumberFormat currencyFormat = NumberFormat.getCurrencyInstance(new Locale("es", "MX"));
+        // Evitar el constructor obsoleto Locale(String,String) (deprecado en JDK 19+)
+        NumberFormat currencyFormat = NumberFormat.getCurrencyInstance(Locale.forLanguageTag("es-MX"));
 
         kpiMovHoy.setText(String.valueOf(hoy));
         kpiActivos.setText(String.valueOf(activos));
@@ -276,15 +313,14 @@ public class SuministrosController {
 
             String prov = s.getProveedor();
             String mot = s.getMotivo();
-            StringBuilder det = new StringBuilder();
+            List<String> partes = new LinkedList<>();
             if (prov != null && !prov.trim().isEmpty()) {
-                det.append("Proveedor: ").append(prov);
+                partes.add("Proveedor: " + prov);
             }
             if (mot != null && !mot.trim().isEmpty()) {
-                if (det.length() > 0) det.append(" | ");
-                det.append("Motivo: ").append(mot);
+                partes.add("Motivo: " + mot);
             }
-            this.detalles = det.toString();
+            this.detalles = String.join(" | ", partes);
             this.stock = ""; // No disponible en la tabla Suministros
 
             this.itemLc = item.toLowerCase();

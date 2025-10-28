@@ -131,6 +131,14 @@ CREATE TABLE IF NOT EXISTS Respaldos (
     FOREIGN KEY (usuario) REFERENCES Usuarios(id_usuario)
 );
 
+CREATE TABLE IF NOT EXISTS Plan_Catalogo (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nombre VARCHAR(100) NOT NULL UNIQUE,
+    descripcion VARCHAR(255),
+    edad VARCHAR(50),
+    estado VARCHAR(30) NOT NULL
+);
+
 CREATE OR REPLACE VIEW Vista_Inventario_Valorizado AS
 SELECT
     Id_Medicamento,
@@ -217,5 +225,26 @@ INSERT INTO Auditoria (id_usuario, accion, modulo, detalle, referencia) VALUES
 INSERT INTO Respaldos (archivo, fecha_hora, tipo, tamaño, estado, usuario) VALUES
 ('backup_completo_2025-10-15.sql', '2025-10-15 02:30:00', 'Completo', '25MB', 'Exitoso', 1),
 ('backup_selectivo_medicamentos_2025-10-18.sql', '2025-10-18 03:10:00', 'Selectivo', '3MB', 'Exitoso', 2);
+
+-- Poblar catálogo de planes sanitarios (evita duplicados por nombre)
+INSERT INTO Plan_Catalogo (nombre, descripcion, edad, estado) VALUES
+('Programa Vacunación Ponedoras', 'Aplicar según edad y cronograma', '7–72 semanas', 'Preventivo')
+ON DUPLICATE KEY UPDATE nombre = nombre;
+
+INSERT INTO Plan_Catalogo (nombre, descripcion, edad, estado) VALUES
+('Desparasitación Trimestral', 'Programa de desparasitación interna/externa', 'Cada 12 semanas', 'Preventivo')
+ON DUPLICATE KEY UPDATE nombre = nombre;
+
+INSERT INTO Plan_Catalogo (nombre, descripcion, edad, estado) VALUES
+('Tratamiento Respiratorio', 'Manejo de síntomas respiratorios agudos', 'Según diagnóstico', 'Curativo')
+ON DUPLICATE KEY UPDATE nombre = nombre;
+
+INSERT INTO Plan_Catalogo (nombre, descripcion, edad, estado) VALUES
+('Refuerzo de Suplementación', 'Refuerzo vitamínico y mineral preventivo', 'Mensual', 'Preventivo')
+ON DUPLICATE KEY UPDATE nombre = nombre;
+
+INSERT INTO Plan_Catalogo (nombre, descripcion, edad, estado) VALUES
+('Plan Mixto Bioseguridad', 'Refuerzos y acciones combinadas según riesgo', 'Variable', 'Mixto')
+ON DUPLICATE KEY UPDATE nombre = nombre;
 
 -- fin del script

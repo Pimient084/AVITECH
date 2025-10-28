@@ -2,7 +2,6 @@ package com.avitech.sia.iu;
 
 import com.avitech.sia.App;
 import com.avitech.sia.db.GalponDAO;
-import com.avitech.sia.db.LoteDAO;
 import com.avitech.sia.db.Produccion;
 import com.avitech.sia.db.ProduccionDAO;
 import javafx.beans.property.SimpleIntegerProperty;
@@ -13,24 +12,27 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
-import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class ProduccionController {
 
+    private static final Logger logger = LoggerFactory.getLogger(ProduccionController.class);
+
     // DAOs
     private final ProduccionDAO produccionDAO = new ProduccionDAO();
     private final GalponDAO galponDAO = new GalponDAO();
-    private final LoteDAO loteDAO = new LoteDAO();
+    // Stock repository para ver el stock en producción
 
     // Model
     private final ObservableList<ProduccionRow> masterData = FXCollections.observableArrayList();
@@ -235,7 +237,7 @@ public class ProduccionController {
     }
 
     private void showError(String header, Exception e) {
-        e.printStackTrace();
+        logger.error(header, e);
         new Alert(Alert.AlertType.ERROR, header + ": " + e.getMessage()).showAndWait();
     }
 

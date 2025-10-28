@@ -21,6 +21,7 @@ import javafx.scene.control.cell.ProgressBarTableCell;
 import javafx.scene.layout.Pane;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
+import javafx.event.ActionEvent;
 
 import java.io.IOException;
 import java.time.LocalDate;
@@ -285,6 +286,18 @@ public class SanidadOperController {
         cbMedicamento.getSelectionModel().selectFirst();
         dpDesde.setValue(LocalDate.now().minusDays(30));
         dpHasta.setValue(LocalDate.now());
+    }
+
+    @FXML
+    public void onAgregarPlanSanitario(ActionEvent event) {
+        new Alert(Alert.AlertType.INFORMATION,
+                "Próximamente: formulario para registrar un nuevo Plan Sanitario.").showAndWait();
+    }
+
+    // Sobre-carga sin argumentos para validadores FXML estrictos
+    @FXML
+    public void onAgregarPlanSanitario() {
+        onAgregarPlanSanitario(null);
     }
 
     /* ============== Row models ============== */

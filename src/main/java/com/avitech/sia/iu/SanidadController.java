@@ -10,6 +10,7 @@ import com.avitech.sia.iu.sanidad.RegEventoController;
 import com.avitech.sia.iu.sanidad.RegMedicamentoController;
 import com.avitech.sia.iu.sanidad.dto.AplicacionDTO;
 import com.avitech.sia.iu.sanidad.dto.EventoDTO;
+import com.avitech.sia.iu.sanidad.PlanSanitarioFormController;
 import javafx.beans.property.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -26,6 +27,10 @@ import java.io.IOException;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
+import javafx.event.ActionEvent;
+import com.avitech.sia.db.PlanCatalog;
+import com.avitech.sia.db.PlanCatalogDAO;
+import java.sql.SQLException;
 
 public class SanidadController {
 
@@ -33,6 +38,7 @@ public class SanidadController {
     private final MedicamentoDAO medicamentoDAO = new MedicamentoDAO();
     private final GalponDAO galponDAO = new GalponDAO();
     private final PlanSanitarioDAO planSanitarioDAO = new PlanSanitarioDAO();
+    private final PlanCatalogDAO planCatalogDAO = new PlanCatalogDAO();
 
     // Top / sidebar
     @FXML
@@ -86,14 +92,8 @@ public class SanidadController {
         loadFilterCombos();
         loadKpis();
 
-        // ------ Planes (aún con datos dummy) ------
-        ObservableList<PlanRow> planes = FXCollections.observableArrayList(
-                new PlanRow("Programa Vacunación Ponedoras",
-                        "Aplicar según edad y cronograma", "7–72 semanas", "Preventivo"),
-                new PlanRow("Tratamiento Respiratorio",
-                        "Síntomas respiratorios y recuperación", "Todos", "Curativo")
-        );
-        tblPlanes.setItems(planes);
+        // ------ Planes (desde BD) ------
+        loadPlanes();
 
         // ------ Filtros (valores iniciales) ------
         dpDesde.setValue(LocalDate.now().minusDays(30));
@@ -175,6 +175,21 @@ public class SanidadController {
         new Alert(Alert.AlertType.ERROR, header + ": " + e.getMessage()).showAndWait();
     }
 
+    private boolean isDuplicateError(Exception ex) {
+        Throwable t = ex;
+        while (t != null) {
+            if (t instanceof SQLException sqlEx) {
+                String state = sqlEx.getSQLState();
+                String msg = String.valueOf(sqlEx.getMessage()).toLowerCase();
+                if ("23000".equals(state) || msg.contains("duplicate")) {
+                    return true;
+                }
+            }
+            t = t.getCause();
+        }
+        return false;
+    }
+
     /* ================= Acciones ================= */
 
     @FXML
@@ -253,13 +268,111 @@ public class SanidadController {
 
             Medicamento newMedicamento = controller.getResult();
             if (newMedicamento != null) {
-                medicamentoDAO.insert(newMedicamento);
-                loadMedicamentos(); // Refresh table
-                loadFilterCombos(); // Refresh combo box if new meds added
-                loadKpis();         // Refresh KPIs
+                try {
+                    medicamentoDAO.insert(newMedicamento);
+                    loadMedicamentos(); // Refresh table
+                    loadFilterCombos(); // Refresh combo box if new meds added
+                    loadKpis();         // Refresh KPIs
+                } catch (Exception e) {
+                    if (isDuplicateError(e)) {
+                        new Alert(Alert.AlertType.WARNING, "Ya existe un medicamento con ese nombre. Cambia el nombre e intenta otra vez.").showAndWait();
+                    } else {
+                        showError("Error al registrar medicamento", e);
+                    }
+                }
             }
         } catch (Exception e) {
             showError("Error al registrar medicamento", e);
+        }
+    }
+
+    private PlanRow getSelectedPlan() {
+        return tblPlanes.getSelectionModel().getSelectedItem();
+    }
+
+    @FXML
+    private void onEditarPlanSanitario() {
+        PlanRow selected = getSelectedPlan();
+        if (selected == null) {
+            new Alert(Alert.AlertType.INFORMATION, "Selecciona un plan para editar.").showAndWait();
+            return;
+        }
+        try {
+            FXMLLoader loader = new FXMLLoader(App.class.getResource("/fxml/Sanidad/modal_plan_sanitario.fxml"));
+            Pane page = loader.load();
+            Stage dialogStage = new Stage();
+            dialogStage.setTitle("Editar Plan Sanitario");
+            dialogStage.initModality(Modality.WINDOW_MODAL);
+            dialogStage.initOwner(tblPlanes.getScene().getWindow());
+            dialogStage.setScene(new Scene(page));
+
+            PlanSanitarioFormController controller = loader.getController();
+            controller.setDialogStage(dialogStage);
+            controller.setInitial(selected.planProperty().get(), selected.descProperty().get(), selected.edadProperty().get(), selected.estadoProperty().get());
+
+            dialogStage.showAndWait();
+
+            if (controller.isSaved()) {
+                PlanCatalog edit = new PlanCatalog(
+                        selected.getId(),
+                        controller.getPlan(),
+                        controller.getDesc(),
+                        controller.getEdad(),
+                        controller.getEstado()
+                );
+                try {
+                    planCatalogDAO.update(edit);
+                } catch (Exception ex) {
+                    if (isDuplicateError(ex)) {
+                        new Alert(Alert.AlertType.WARNING, "Ya existe un plan con ese nombre. Cambia el nombre e intenta otra vez.").showAndWait();
+                    } else {
+                        showError("Error al actualizar el plan sanitario", ex);
+                    }
+                    return;
+                }
+                loadPlanes();
+            }
+        } catch (Exception e) {
+            showError("Error al editar plan sanitario", e);
+        }
+    }
+
+    @FXML
+    private void onEliminarPlanSanitario() {
+        PlanRow selected = getSelectedPlan();
+        if (selected == null) {
+            new Alert(Alert.AlertType.INFORMATION, "Selecciona un plan para eliminar.").showAndWait();
+            return;
+        }
+        Alert confirm = new Alert(Alert.AlertType.CONFIRMATION, "¿Eliminar el plan '" + selected.planProperty().get() + "'?", ButtonType.OK, ButtonType.CANCEL);
+        confirm.setHeaderText("Confirmar eliminación");
+        confirm.showAndWait();
+        if (confirm.getResult() != ButtonType.OK) return;
+        try {
+            planCatalogDAO.deleteById(selected.getId());
+            loadPlanes();
+        } catch (Exception e) {
+            showError("Error al eliminar plan sanitario", e);
+        }
+    }
+
+    private void loadPlanes() {
+        try {
+            List<PlanCatalog> planesBD = planCatalogDAO.listAll();
+            ObservableList<PlanRow> rows = FXCollections.observableArrayList(
+                    planesBD.stream().map(p -> new PlanRow(
+                            p.getId(),
+                            p.getNombre(),
+                            p.getDescripcion(),
+                            p.getEdad(),
+                            p.getEstado()
+                    )).collect(Collectors.toList())
+            );
+            tblPlanes.setItems(rows);
+        } catch (Exception e) {
+            // Si hay error (tabla no existe o BD vacía), inicializamos lista vacía y mostramos aviso
+            tblPlanes.setItems(FXCollections.observableArrayList());
+            showError("No se pudieron cargar los planes sanitarios", e);
         }
     }
 
@@ -279,6 +392,55 @@ public class SanidadController {
         dpDesde.setValue(LocalDate.now().minusDays(30));
         dpHasta.setValue(LocalDate.now());
         // TODO: recargar tabla completa
+    }
+
+    @FXML
+    public void onAgregarPlanSanitario(ActionEvent event) {
+        try {
+            FXMLLoader loader = new FXMLLoader(App.class.getResource("/fxml/Sanidad/modal_plan_sanitario.fxml"));
+            Pane page = loader.load();
+
+            Stage dialogStage = new Stage();
+            dialogStage.setTitle("Agregar Plan Sanitario");
+            dialogStage.initModality(Modality.WINDOW_MODAL);
+            dialogStage.initOwner(tblPlanes.getScene().getWindow());
+            dialogStage.setScene(new Scene(page));
+
+            PlanSanitarioFormController controller = loader.getController();
+            controller.setDialogStage(dialogStage);
+
+            dialogStage.showAndWait();
+
+            if (controller.isSaved()) {
+                // Persistir en BD
+                PlanCatalog nuevo = new PlanCatalog(
+                        controller.getPlan(),
+                        controller.getDesc(),
+                        controller.getEdad(),
+                        controller.getEstado()
+                );
+                try {
+                    planCatalogDAO.insert(nuevo);
+                } catch (Exception ex) {
+                    if (isDuplicateError(ex)) {
+                        new Alert(Alert.AlertType.WARNING, "Ya existe un plan con ese nombre. Cambia el nombre e intenta otra vez.").showAndWait();
+                    } else {
+                        showError("Error al guardar el plan sanitario", ex);
+                    }
+                    return;
+                }
+                // Refrescar tabla desde BD para mantener consistencia
+                loadPlanes();
+            }
+        } catch (Exception e) {
+            showError("Error al agregar plan sanitario", e);
+        }
+    }
+
+    // Sobre-carga sin argumentos para validadores FXML estrictos
+    @FXML
+    public void onAgregarPlanSanitario() {
+        onAgregarPlanSanitario(null);
     }
 
     /* ================= Navegación ================= */
@@ -339,33 +501,26 @@ public class SanidadController {
     /* ================= Row models ================= */
 
     public static class PlanRow {
+        private final IntegerProperty id = new SimpleIntegerProperty();
         private final StringProperty plan = new SimpleStringProperty();
         private final StringProperty desc = new SimpleStringProperty();
         private final StringProperty edad = new SimpleStringProperty();
         private final StringProperty estado = new SimpleStringProperty();
 
-        public PlanRow(String p, String d, String e, String s) {
+        public PlanRow(int id, String p, String d, String e, String s) {
+            this.id.set(id);
             plan.set(p);
             desc.set(d);
             edad.set(e);
             estado.set(s);
         }
 
-        public StringProperty planProperty() {
-            return plan;
-        }
-
-        public StringProperty descProperty() {
-            return desc;
-        }
-
-        public StringProperty edadProperty() {
-            return edad;
-        }
-
-        public StringProperty estadoProperty() {
-            return estado;
-        }
+        public int getId() { return id.get(); }
+        public IntegerProperty idProperty() { return id; }
+        public StringProperty planProperty() { return plan; }
+        public StringProperty descProperty() { return desc; }
+        public StringProperty edadProperty() { return edad; }
+        public StringProperty estadoProperty() { return estado; }
     }
 
     public static class MedRow {

@@ -33,7 +33,7 @@
 
     <HBox spacing="10" alignment="CENTER_RIGHT">
         <Button text="Cancelar" onAction="#onClose" styleClass="secondary"/>
-        <Button text="Guardar Medicamento" onAction="#onSave" styleClass="primary"/>
+        <Button text="Registrar Medicamento" onAction="#onSave" styleClass="primary"/>
     </HBox>
 
 </VBox>

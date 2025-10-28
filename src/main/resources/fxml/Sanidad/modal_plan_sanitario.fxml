@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns:fx="http://javafx.com/fxml" fx:controller="com.avitech.sia.iu.sanidad.PlanSanitarioFormController">
+    <center>
+        <VBox spacing="10" styleClass="content" prefWidth="520">
+            <children>
+                <Label text="Nuevo Plan Sanitario" styleClass="h3"/>
+                <GridPane hgap="10" vgap="10">
+                    <columnConstraints>
+                        <ColumnConstraints prefWidth="140"/>
+                        <ColumnConstraints hgrow="ALWAYS"/>
+                    </columnConstraints>
+
+                    <Label text="Plan / Programa" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+                    <TextField fx:id="txtPlan" promptText="Nombre del plan" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+
+                    <Label text="Descripción" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+                    <TextArea fx:id="txtDesc" promptText="Descripción breve" GridPane.rowIndex="1" GridPane.columnIndex="1" prefRowCount="3"/>
+
+                    <Label text="Edad / Frecuencia" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+                    <TextField fx:id="txtEdad" promptText="p.ej. 7–72 semanas" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
+
+                    <Label text="Estado" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
+                    <ComboBox fx:id="cbEstado" GridPane.rowIndex="3" GridPane.columnIndex="1" promptText="Selecciona"/>
+                </GridPane>
+            </children>
+            <padding><Insets topRightBottomLeft="16"/></padding>
+        </VBox>
+    </center>
+    <bottom>
+        <HBox spacing="8" alignment="CENTER_RIGHT">
+            <children>
+                <Button text="Cancelar" onAction="#onCancel"/>
+                <Button text="Guardar" onAction="#onSave" defaultButton="true"/>
+            </children>
+            <padding><Insets topRightBottomLeft="10"/></padding>
+        </HBox>
+    </bottom>
+</BorderPane>

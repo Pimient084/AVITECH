@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns:fx="http://javafx.com/fxml" fx:controller="com.avitech.sia.iu.StockProduccionController" prefWidth="800" prefHeight="440">
+    <center>
+        <VBox spacing="8">
+            <padding>
+                <Insets top="10" right="10" bottom="10" left="10" />
+            </padding>
+                <Label fx:id="lblTitle" text="Stock en Producción" styleClass="h3" />
+                <TableView fx:id="tblStock" prefHeight="320">
+                    <columns>
+                        <TableColumn fx:id="colId" text="ID" prefWidth="60" />
+                        <TableColumn fx:id="colProducto" text="Producto" prefWidth="220" />
+                        <TableColumn fx:id="colLote" text="Lote" prefWidth="140" />
+                        <TableColumn fx:id="colCantidad" text="Cantidad" prefWidth="90" />
+                        <TableColumn fx:id="colUbicacion" text="Ubicación" prefWidth="140" />
+                        <TableColumn fx:id="colEstado" text="Estado" prefWidth="120" />
+                    </columns>
+                </TableView>
+                <HBox spacing="8" alignment="CENTER_RIGHT">
+                    <Button fx:id="btnClose" text="Cerrar" onAction="#onClose" styleClass="ghostBtn" />
+                </HBox>
+         </VBox>
+     </center>
+</BorderPane>

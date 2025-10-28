@@ -66,17 +66,20 @@
                                 <Label text="Control Sanitario" styleClass="h2"/>
                                 <Label text="Gestión integral de salud, medicamentos y eventos sanitarios" styleClass="helper"/>
                                 <Pane HBox.hgrow="ALWAYS"/>
-                                <Button text="Registrar Aplicación"
+                                <Button text="💉 Registrar Aplicación"
                                         fx:id="btnRegistrarAplicacion"
                                         onAction="#onRegistrarAplicacion"
+                                        styleClass="primary"
                                         />
-                                <Button text="Registrar Evento"
+                                <Button text="🦠 Registrar Evento"
                                         fx:id="btnRegistrarEvento"
                                         onAction="#onRegistrarEvento"
+                                        styleClass="primary"
                                         />
-                                <Button text="Registrar Medicamento"
+                                <Button text="💊 Registrar Medicamento"
                                         fx:id="btnRegistrarMedicamento"
                                         onAction="#onRegistrarMedicamento"
+                                        styleClass="primary"
                                         />
                             </children>
                         </HBox>
@@ -126,6 +129,11 @@
                                     <children>
                                         <Label text="Plan Sanitario y Catálogo de Medicamentos" styleClass="card-title"/>
                                         <Label text="Consulte protocolos recomendados y disponibilidad de medicamentos" styleClass="helper"/>
+                                        <HBox alignment="CENTER_RIGHT" spacing="8" translateY="-25">
+                                            <Button text="➕ Agregar Plan Sanitario" onAction="#onAgregarPlanSanitario" styleClass="primary"/>
+                                            <Button text="✏️ Editar" onAction="#onEditarPlanSanitario" styleClass="secondary"/>
+                                            <Button text="🗑 Eliminar" onAction="#onEliminarPlanSanitario" styleClass="danger"/>
+                                        </HBox>
                                         <TableView fx:id="tblPlanes" prefHeight="260" VBox.vgrow="ALWAYS">
                                             <columns>
                                                 <TableColumn fx:id="colPlan"  text="Plan / Programa" prefWidth="250"/>

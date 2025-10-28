@@ -175,6 +175,12 @@ public class SanidadSupervisorController {
         new Alert(Alert.AlertType.ERROR, header + ": " + e.getMessage()).showAndWait();
     }
 
+    @FXML
+    public void onAgregarPlanSanitario() {
+        new Alert(Alert.AlertType.INFORMATION,
+                "Próximamente: formulario para registrar un nuevo Plan Sanitario.").showAndWait();
+    }
+
     /* ================= Acciones ================= */
 
     @FXML

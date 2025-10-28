@@ -117,6 +117,14 @@
 .card-delta { -fx-text-fill: #0F766E; -fx-font-size: 12px; }
 .card-delta.bad { -fx-text-fill: #B91C1C; }
 
+/* Estilo para modales (paneles dentro de diálogo) */
+.modal-content {
+  -fx-background-color: #FFFFFF;
+  -fx-background-radius: 12;
+  -fx-padding: 12;
+  -fx-effect: dropshadow(gaussian, rgba(17,76,62,0.05), 8, 0, 0, 1);
+}
+
 /* ====== SUPPLIES DASHBOARD ====== */
 .metric-card { -fx-spacing: 6; }
 .metric-title { -fx-text-fill: #60716B; -fx-font-size: 12px; -fx-font-weight: 600; }
@@ -189,8 +197,19 @@
 }
 .button.secondary:hover { -fx-background-color: #E6F3ED; }
 
+/* ====== BOTONES PELIGRO (Eliminar) ====== */
+.button.danger {
+  -fx-background-color: #B91C1C; /* rojo crítico */
+  -fx-text-fill: #FFFFFF;
+  -fx-font-weight: 600;
+  -fx-background-radius: 12;
+}
+.button.danger:hover { -fx-background-color: #991B1B; }
+.button.danger:pressed { -fx-background-color: #7F1D1D; }
+
 /* ====== TEXTOS ====== */
 .h2 { -fx-font-size: 18px; -fx-font-weight: 800; -fx-text-fill: #0B1E17; }
+.h3 { -fx-font-size: 16px; -fx-font-weight: 700; -fx-text-fill: #0B1E17; }
 .helper { -fx-text-fill: #6B7A73; -fx-font-size: 12px; }
 
 /* ====== LISTVIEW (alertas recientes) ====== */
