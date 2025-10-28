@@ -41,7 +41,7 @@ public class ReportesController {
     @FXML private ProgressBar pbInv, pbProd, pbSan;
 
     // Estado interno
-    private ReportType selectedType = ReportType.STOCK_ACTUAL;
+    private ReportType selectedType = ReportType.PRODUCCION;
 
     /* ================== Navegación ================== */
     @FXML private void goDashboard()  { App.goTo("/fxml/dashboard_admin.fxml", "SIA Avitech — ADMIN"); }
@@ -62,14 +62,11 @@ public class ReportesController {
     /* ============ Acciones principales ============ */
     @FXML private void onGenerar() {
         try {
-            // Si el usuario eligió explícitamente un tipo en el combo, úsalo
             ReportType byCombo = mapTipo(cbTipoReporte != null ? cbTipoReporte.getValue() : null);
             if (byCombo != null) selectedType = byCombo;
-
             if (selectedType == null) {
-                throw new IllegalStateException("Seleccione un tipo de reporte (tarjetas o combo)");
+                throw new IllegalStateException("Seleccione un tipo de reporte (tarjeta o combo)");
             }
-            // Solo PDF por ahora; ignorar rbExcel
             ReportRequest req = new ReportRequest(
                     selectedType,
                     dpDesde.getValue(),
@@ -115,31 +112,26 @@ public class ReportesController {
     @FXML private void onExportarExcel() { /* ignorado: solo PDF */ }
 
     /* ============ Selección de tipo de reporte (tarjetas) ============ */
-    @FXML private void selStockActual()            { setType(ReportType.STOCK_ACTUAL, "Tipo seleccionado: Stock Actual"); }
-    @FXML private void selRegistroArticulo()       { setType(ReportType.REGISTRO_ARTICULO, "Tipo seleccionado: Registro por Artículo"); }
-    @FXML private void selRecibosInsumos()         { setType(ReportType.RECIBOS_INSUMOS, "Tipo seleccionado: Recibos de Insumos"); }
-    @FXML private void selConsumoAlimento()        { warnNoDisponible(); }
-    @FXML private void selAplicacionesSanitarias() { warnNoDisponible(); }
-    @FXML private void selProduccionTam()          { warnNoDisponible(); }
-    @FXML private void selMortalidad()             { warnNoDisponible(); }
+    @FXML private void selSanidad()   { setType(ReportType.SANIDAD,    "Tipo seleccionado: Sanidad"); }
+    @FXML private void selProduccion(){ setType(ReportType.PRODUCCION, "Tipo seleccionado: Producción"); }
+    @FXML private void selAlertas()   { setType(ReportType.ALERTAS,    "Tipo seleccionado: Alertas"); }
+    @FXML private void selAuditoria() { setType(ReportType.AUDITORIA,  "Tipo seleccionado: Auditoría"); }
+    @FXML private void selUsuarios()  { setType(ReportType.USUARIOS,   "Tipo seleccionado: Usuarios"); }
 
     private void setType(ReportType t, String msg) {
         this.selectedType = t;
         lblInfoFiltros.setText(msg);
         if (cbTipoReporte != null) cbTipoReporte.getSelectionModel().select(tipoToText(t));
     }
-    private void warnNoDisponible() {
-        Alert a = new Alert(Alert.AlertType.INFORMATION, "Este tipo de reporte estará disponible próximamente. Por ahora solo PDF: Stock, Registro y Recibos.");
-        a.setHeaderText("Reporte no disponible");
-        a.showAndWait();
-    }
 
     private void populateTipoCombo() {
         if (cbTipoReporte == null) return;
         cbTipoReporte.getItems().setAll(
-                tipoToText(ReportType.STOCK_ACTUAL),
-                tipoToText(ReportType.REGISTRO_ARTICULO),
-                tipoToText(ReportType.RECIBOS_INSUMOS)
+                tipoToText(ReportType.SANIDAD),
+                tipoToText(ReportType.PRODUCCION),
+                tipoToText(ReportType.ALERTAS),
+                tipoToText(ReportType.AUDITORIA),
+                tipoToText(ReportType.USUARIOS)
         );
         cbTipoReporte.getSelectionModel().select(tipoToText(selectedType));
     }
@@ -147,24 +139,27 @@ public class ReportesController {
     private String tipoToText(ReportType t) {
         if (t == null) return null;
         return switch (t) {
-            case STOCK_ACTUAL -> "Stock Actual";
-            case REGISTRO_ARTICULO -> "Registro por Artículo";
-            case RECIBOS_INSUMOS -> "Recibos de Insumos";
+            case SANIDAD -> "Sanidad";
+            case PRODUCCION -> "Producción";
+            case ALERTAS -> "Alertas";
+            case AUDITORIA -> "Auditoría";
+            case USUARIOS -> "Usuarios";
         };
     }
     private ReportType mapTipo(String text) {
         if (text == null) return null;
         switch (text) {
-            case "Stock Actual": return ReportType.STOCK_ACTUAL;
-            case "Registro por Artículo": return ReportType.REGISTRO_ARTICULO;
-            case "Recibos de Insumos": return ReportType.RECIBOS_INSUMOS;
+            case "Sanidad": return ReportType.SANIDAD;
+            case "Producción": return ReportType.PRODUCCION;
+            case "Alertas": return ReportType.ALERTAS;
+            case "Auditoría": return ReportType.AUDITORIA;
+            case "Usuarios": return ReportType.USUARIOS;
             default: return null;
         }
     }
 
     @FXML
     private void initialize() {
-        // Tip utilitario: marca “Reportes” como activo en el sidebar si aplica una clase CSS
         lblHeader.setText("Administrador");
         lblSystemStatus.setText("Sistema Offline – MySQL Local");
 
@@ -190,7 +185,7 @@ public class ReportesController {
         pbSan.setProgress(0.25);
 
         // Estado inicial
-        setType(ReportType.STOCK_ACTUAL, "Tipo seleccionado: Stock Actual");
+        setType(ReportType.PRODUCCION, "Tipo seleccionado: Producción");
         if (rbPdf != null) rbPdf.setSelected(true);
     }
 }

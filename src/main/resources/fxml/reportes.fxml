@@ -119,7 +119,7 @@
                         </children>
                     </VBox>
 
-                    <!-- Tarjetas de tipo de reporte -->
+                    <!-- Tarjetas de tipo de reporte (solo 5 tipos requeridos) -->
                     <GridPane hgap="12" vgap="12">
                         <columnConstraints>
                             <ColumnConstraints percentWidth="33.3"/>
@@ -130,60 +130,44 @@
                         <!-- Fila 1 -->
                         <VBox styleClass="card" GridPane.columnIndex="0">
                             <children>
-                                <Label text="Stock Actual" styleClass="card-title"/>
-                                <Label text="Inventario actual de insumos y productos" styleClass="helper"/>
-                                <Button text="Inventario" onAction="#selStockActual" styleClass="secondary"/>
+                                <Label text="Sanidad" styleClass="card-title"/>
+                                <Label text="Medicamentos y stock sanitario" styleClass="helper"/>
+                                <Button text="Sanidad" onAction="#selSanidad" styleClass="secondary"/>
                             </children>
                         </VBox>
                         <VBox styleClass="card" GridPane.columnIndex="1">
                             <children>
-                                <Label text="Registro por Artículo" styleClass="card-title"/>
-                                <Label text="Movimientos detallados de artículos específicos" styleClass="helper"/>
-                                <Button text="Inventario" onAction="#selRegistroArticulo" styleClass="secondary"/>
+                                <Label text="Producción" styleClass="card-title"/>
+                                <Label text="Producción de huevos por día/galpón" styleClass="helper"/>
+                                <Button text="Producción" onAction="#selProduccion" styleClass="secondary"/>
                             </children>
                         </VBox>
                         <VBox styleClass="card" GridPane.columnIndex="2">
                             <children>
-                                <Label text="Recibos de Insumos" styleClass="card-title"/>
-                                <Label text="Registro de entradas y compras" styleClass="helper"/>
-                                <Button text="Compras" onAction="#selRecibosInsumos" styleClass="secondary"/>
+                                <Label text="Alertas" styleClass="card-title"/>
+                                <Label text="Resumen de alertas recientes" styleClass="helper"/>
+                                <Button text="Alertas" onAction="#selAlertas" styleClass="secondary"/>
                             </children>
                         </VBox>
 
                         <!-- Fila 2 -->
                         <VBox styleClass="card" GridPane.rowIndex="1" GridPane.columnIndex="0">
                             <children>
-                                <Label text="Consumo de Alimento" styleClass="card-title"/>
-                                <Label text="Análisis de consumo de alimento por lote" styleClass="helper"/>
-                                <Button text="Alimentación" onAction="#selConsumoAlimento" styleClass="secondary"/>
+                                <Label text="Auditoría" styleClass="card-title"/>
+                                <Label text="Eventos y acciones del sistema" styleClass="helper"/>
+                                <Button text="Auditoría" onAction="#selAuditoria" styleClass="secondary"/>
                             </children>
                         </VBox>
                         <VBox styleClass="card" GridPane.rowIndex="1" GridPane.columnIndex="1">
                             <children>
-                                <Label text="Aplicaciones Sanitarias" styleClass="card-title"/>
-                                <Label text="Registro de vacunas y tratamientos aplicados" styleClass="helper"/>
-                                <Button text="Sanidad" onAction="#selAplicacionesSanitarias" styleClass="secondary"/>
-                            </children>
-                        </VBox>
-                        <VBox styleClass="card" GridPane.rowIndex="1" GridPane.columnIndex="2">
-                            <children>
-                                <Label text="Producción por Lote/Tamaño" styleClass="card-title"/>
-                                <Label text="Análisis detallado de producción clasificada" styleClass="helper"/>
-                                <Button text="Producción" onAction="#selProduccionTam" styleClass="secondary"/>
-                            </children>
-                        </VBox>
-
-                        <!-- Fila 3 -->
-                        <VBox styleClass="card" GridPane.rowIndex="2" GridPane.columnIndex="0">
-                            <children>
-                                <Label text="Mortalidad" styleClass="card-title"/>
-                                <Label text="Registro y análisis de casos de mortalidad" styleClass="helper"/>
-                                <Button text="Sanidad" onAction="#selMortalidad" styleClass="secondary"/>
+                                <Label text="Usuarios" styleClass="card-title"/>
+                                <Label text="Listado de usuarios" styleClass="helper"/>
+                                <Button text="Usuarios" onAction="#selUsuarios" styleClass="secondary"/>
                             </children>
                         </VBox>
                     </GridPane>
 
-                    <!-- Registro por artículo + exportación -->
+                    <!-- Registro por artículo + exportación (se mantiene solo para formato/preview) -->
                     <VBox styleClass="card" spacing="12">
                         <children>
                             <Label text="Registro por Artículo" styleClass="card-title"/>
