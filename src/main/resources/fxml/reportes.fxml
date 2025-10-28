@@ -76,6 +76,9 @@
                         <children>
                             <Label text="Generación de Reportes" styleClass="h2"/>
                             <Pane HBox.hgrow="ALWAYS"/>
+                            <!-- Nuevo selector de tipo -->
+                            <Label text="Tipo:"/>
+                            <ComboBox fx:id="cbTipoReporte" prefWidth="220" promptText="Seleccione tipo"/>
                             <Button fx:id="btnGenerar" text="🧾 Generar Reporte" styleClass="primary" onAction="#onGenerar"/>
                             <Button text="Limpiar" onAction="#onLimpiar" styleClass="secondary"/>
                         </children>

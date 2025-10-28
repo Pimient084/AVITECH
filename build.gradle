@@ -30,6 +30,9 @@ dependencies {
     implementation 'org.slf4j:slf4j-api:2.0.16'
     runtimeOnly   'org.slf4j:slf4j-simple:2.0.16'
 
+    // PDF generation
+    implementation 'org.apache.pdfbox:pdfbox:2.0.30'
+
     testImplementation 'org.junit.jupiter:junit-jupiter:5.11.0'
 }
 
