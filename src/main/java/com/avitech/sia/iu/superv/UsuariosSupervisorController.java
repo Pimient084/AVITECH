@@ -164,6 +164,7 @@ public class UsuariosSupervisorController {
             dialogStage.initOwner(btnNuevo.getScene().getWindow());
             Scene scene = new Scene(page);
             dialogStage.setScene(scene);
+            App.configureFullScreen(dialogStage);
 
             RegUsuarioController controller = loader.getController();
             controller.setDialogStage(dialogStage);
@@ -194,6 +195,7 @@ public class UsuariosSupervisorController {
             dialogStage.initOwner(tblUsuarios.getScene().getWindow());
             Scene scene = new Scene(page);
             dialogStage.setScene(scene);
+            App.configureFullScreen(dialogStage);
 
             RegUsuarioController controller = loader.getController();
             controller.setDialogStage(dialogStage);

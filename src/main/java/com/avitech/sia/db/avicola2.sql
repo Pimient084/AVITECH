@@ -11,16 +11,6 @@ CREATE TABLE IF NOT EXISTS Usuarios (
     telefono VARCHAR(20),
     direccion VARCHAR(255)
 );
-
--- Insertar usuarios de prueba con contraseñas hasheadas (BCrypt)
--- admin -> contraseña en texto: 'admin123'
--- supervisor -> 'super123'
--- operator -> 'oper123'
-INSERT INTO Usuarios (usuario, password, rol) VALUES
-('admin', '$2a$12$MrbbvFNZXMQlMLHUEUXhUuDIgQUS7J/nS7alf4BeygFNCOaQSGEMm', 'ADMIN'),
-('supervisor', '$2a$12$oVmFs29hI0CrbCoJ.qm5beSORg91AvA7tnRczcFyZJhHlgGbRnVg2', 'SUPERVISOR'),
-('operator', '$2a$12$oCExSUVt1SpsCZyN0irpoemVLJDzRo5wTQGtQp5HIWrAHUX0IlO9.', 'OPERADOR');
-
 CREATE TABLE IF NOT EXISTS Lote (
     Id_lote INT AUTO_INCREMENT PRIMARY KEY,
     nombre_lote VARCHAR(25) NOT NULL,
@@ -164,87 +154,228 @@ FROM Galpones g
 JOIN Lote l ON g.Id_lote = l.Id_lote
 LEFT JOIN Usuarios u ON g.id_usuario = u.id_usuario;
 
--- Datos de ejemplo para pruebas
--- NOTA: se asume que los Usuarios ya insertados arriba tienen id_usuario = 1 (admin), 2 (supervisor), 3 (operator)
+-- =========================
+-- 1) Usuarios (unique: usuario)
+-- =========================
+INSERT INTO Usuarios (usuario, password, rol, email, telefono, direccion)
+VALUES ('admin', 'admin123', 'ADMIN', 'admin@avicola.local', '0990000001', 'Oficina Central')
+ON DUPLICATE KEY UPDATE password = VALUES(password), rol = VALUES(rol), email = VALUES(email), telefono = VALUES(telefono), direccion = VALUES(direccion);
 
--- Lotes
-INSERT INTO Lote (nombre_lote, estado, cantidadGallinas) VALUES
-('Lote A', 'Activo', 1200),
-('Lote B', 'Activo', 900),
-('Lote C', 'Reemplazo', 600);
+INSERT INTO Usuarios (usuario, password, rol, email, telefono, direccion)
+VALUES ('supervisor', 'super123', 'SUPERVISOR', 'supervisor@avicola.local', '0990000002', 'Planta Principal')
+ON DUPLICATE KEY UPDATE password = VALUES(password), rol = VALUES(rol), email = VALUES(email), telefono = VALUES(telefono), direccion = VALUES(direccion);
 
--- Galpones
-INSERT INTO Galpones (Id_lote, nombre, capacidad, estado_sanitario, id_usuario) VALUES
-(1, 'Galpón 1A', 400, 'OK', 1),
-(1, 'Galpón 1B', 800, 'OK', 2),
-(2, 'Galpón 2A', 450, 'Observado', 3),
-(3, 'Galpón 3A', 600, 'En cuarentena', 2);
+INSERT INTO Usuarios (usuario, password, rol, email, telefono, direccion)
+VALUES ('operador', 'oper123', 'OPERADOR', 'operador@avicola.local', '0990000003', 'Galponera Norte')
+ON DUPLICATE KEY UPDATE password = VALUES(password), rol = VALUES(rol), email = VALUES(email), telefono = VALUES(telefono), direccion = VALUES(direccion);
 
--- Monitoreo (muestras recientes)
-INSERT INTO Monitoreo (id_galpon, temperatura, humedad, fecha) VALUES
-(1, 22.5, 65.0, '2025-10-20'),
-(2, 23.1, 63.5, '2025-10-20'),
-(3, 21.8, 68.2, '2025-10-19'),
-(4, 24.0, 60.0, '2025-10-18');
+-- Cache de IDs
+SET @admin_id     := (SELECT id_usuario FROM Usuarios WHERE usuario='admin' LIMIT 1);
+SET @superv_id    := (SELECT id_usuario FROM Usuarios WHERE usuario='supervisor' LIMIT 1);
+SET @operador_id  := (SELECT id_usuario FROM Usuarios WHERE usuario='operador' LIMIT 1);
 
--- Medicamentos
-INSERT INTO Medicamentos (nombre, presentacion, stock, stock_minimo, valor_unitario) VALUES
-('Vacuna Newcastle', 'Frasco 100ml', 50, 5, 150.00),
-('Antibiótico X', 'Caja 20 tabletas', 200, 20, 25.50),
-('Suplemento A', 'Saco 25kg', 30, 5, 450.00);
+-- =========================
+-- 2) Lotes (clave natural: nombre_lote)
+-- =========================
+INSERT INTO Lote (nombre_lote, estado, cantidadGallinas)
+SELECT 'Lote A', 'Activo', 1200 FROM DUAL
+WHERE NOT EXISTS (SELECT 1 FROM Lote WHERE nombre_lote='Lote A');
 
--- Plan sanitario (aplicaciones realizadas)
-INSERT INTO Plan_Sanitario (Id_lote, Id_medicamento, fecha, nombre_enfermedad, muertes, descripcion, observaciones) VALUES
-(1, 1, '2025-09-15', 'Newcastle', 2, 'Aplicación preventiva anual', 'Sin incidencias'),
-(2, 2, '2025-10-01', 'Infección bacteriana', 5, 'Tratamiento por diagnóstico', 'Monitorear 7 días'),
-(1, 3, '2025-08-05', 'Deficiencia nutricional', 0, 'Suplemento vitamínico', 'Mejoría observado');
+INSERT INTO Lote (nombre_lote, estado, cantidadGallinas)
+SELECT 'Lote B', 'Activo', 900 FROM DUAL
+WHERE NOT EXISTS (SELECT 1 FROM Lote WHERE nombre_lote='Lote B');
 
--- Producción de huevos (muestras)
-INSERT INTO ProduccionHuevos (fecha, galpon, total_huevos, huevos_L, huevos_M, huevos_S, temperatura, humedad, mortalidad, responsable) VALUES
-('2025-10-20', 1, 320, 120, 130, 70, 22.5, 65.0, 1, 'Operador A'),
-('2025-10-20', 2, 640, 240, 260, 140, 23.1, 63.5, 2, 'Operador B'),
-('2025-10-19', 3, 280, 100, 110, 70, 21.8, 68.2, 0, 'Operador C');
+INSERT INTO Lote (nombre_lote, estado, cantidadGallinas)
+SELECT 'Lote C', 'Reemplazo', 600 FROM DUAL
+WHERE NOT EXISTS (SELECT 1 FROM Lote WHERE nombre_lote='Lote C');
 
--- Suministros (entradas y salidas)
-INSERT INTO Suministros (fecha, tipo, item, cantidad, unidad, responsable, proveedor, motivo, valor_total) VALUES
-('2025-10-10', 'Entrada', 'Saco de alimento 25kg', 10, 'unidad', 'Proveedor X', 'Proveedor X', 'Compra semanal', 4500.00),
-('2025-10-12', 'Salida', 'Vacuna Newcastle', 2, 'frasco', 'Operador B', 'Alimentación', 'Uso en lote 1', 300.00);
+SET @loteA_id := (SELECT Id_lote FROM Lote WHERE nombre_lote='Lote A' LIMIT 1);
+SET @loteB_id := (SELECT Id_lote FROM Lote WHERE nombre_lote='Lote B' LIMIT 1);
+SET @loteC_id := (SELECT Id_lote FROM Lote WHERE nombre_lote='Lote C' LIMIT 1);
 
--- Alertas
-INSERT INTO Alertas (tipo, descripcion, categoria, id_item, estado) VALUES
-('Advertencia', 'Stock de Suplemento A por debajo del mínimo', 'Stock', 3, 'Activa'),
-('Crítico', 'Aumento de mortalidad en Galpón 2A', 'Sanidad', 3, 'Activa');
+-- =========================
+-- 3) Galpones (clave natural: nombre)
+-- =========================
+INSERT INTO Galpones (Id_lote, nombre, capacidad, estado_sanitario, id_usuario)
+SELECT @loteA_id, 'Galpón 1A', 400, 'OK', @admin_id FROM DUAL
+WHERE NOT EXISTS (SELECT 1 FROM Galpones WHERE nombre='Galpón 1A');
 
--- Auditoría (acciones de usuarios)
-INSERT INTO Auditoria (id_usuario, accion, modulo, detalle, referencia) VALUES
-(1, 'Login', 'Autenticación', 'Acceso exitoso del admin', 'usuario=admin'),
-(2, 'Registro Monitoreo', 'Monitoreo', 'Registro de temperatura/humedad galpón 1B', 'galpon=2'),
-(3, 'Registro Producción', 'Producción', 'Ingreso de producción diaria', 'produccion_id=NULL');
+INSERT INTO Galpones (Id_lote, nombre, capacidad, estado_sanitario, id_usuario)
+SELECT @loteA_id, 'Galpón 1B', 800, 'OK', @superv_id FROM DUAL
+WHERE NOT EXISTS (SELECT 1 FROM Galpones WHERE nombre='Galpón 1B');
 
--- Respaldos (registro de backups)
-INSERT INTO Respaldos (archivo, fecha_hora, tipo, tamaño, estado, usuario) VALUES
-('backup_completo_2025-10-15.sql', '2025-10-15 02:30:00', 'Completo', '25MB', 'Exitoso', 1),
-('backup_selectivo_medicamentos_2025-10-18.sql', '2025-10-18 03:10:00', 'Selectivo', '3MB', 'Exitoso', 2);
+INSERT INTO Galpones (Id_lote, nombre, capacidad, estado_sanitario, id_usuario)
+SELECT @loteB_id, 'Galpón 2A', 450, 'Observado', @operador_id FROM DUAL
+WHERE NOT EXISTS (SELECT 1 FROM Galpones WHERE nombre='Galpón 2A');
 
--- Poblar catálogo de planes sanitarios (evita duplicados por nombre)
-INSERT INTO Plan_Catalogo (nombre, descripcion, edad, estado) VALUES
-('Programa Vacunación Ponedoras', 'Aplicar según edad y cronograma', '7–72 semanas', 'Preventivo')
-ON DUPLICATE KEY UPDATE nombre = nombre;
+INSERT INTO Galpones (Id_lote, nombre, capacidad, estado_sanitario, id_usuario)
+SELECT @loteC_id, 'Galpón 3A', 600, 'En cuarentena', @superv_id FROM DUAL
+WHERE NOT EXISTS (SELECT 1 FROM Galpones WHERE nombre='Galpón 3A');
 
-INSERT INTO Plan_Catalogo (nombre, descripcion, edad, estado) VALUES
-('Desparasitación Trimestral', 'Programa de desparasitación interna/externa', 'Cada 12 semanas', 'Preventivo')
-ON DUPLICATE KEY UPDATE nombre = nombre;
+SET @g1a := (SELECT id_galpon FROM Galpones WHERE nombre='Galpón 1A' LIMIT 1);
+SET @g1b := (SELECT id_galpon FROM Galpones WHERE nombre='Galpón 1B' LIMIT 1);
+SET @g2a := (SELECT id_galpon FROM Galpones WHERE nombre='Galpón 2A' LIMIT 1);
+SET @g3a := (SELECT id_galpon FROM Galpones WHERE nombre='Galpón 3A' LIMIT 1);
 
-INSERT INTO Plan_Catalogo (nombre, descripcion, edad, estado) VALUES
-('Tratamiento Respiratorio', 'Manejo de síntomas respiratorios agudos', 'Según diagnóstico', 'Curativo')
-ON DUPLICATE KEY UPDATE nombre = nombre;
+-- =========================
+-- 4) Monitoreo (clave natural: fecha + id_galpon)
+-- =========================
+INSERT INTO Monitoreo (id_galpon, temperatura, humedad, fecha)
+SELECT @g1a, 22.5, 65.0, DATE('2025-10-20') FROM DUAL
+WHERE NOT EXISTS (SELECT 1 FROM Monitoreo WHERE id_galpon=@g1a AND fecha=DATE('2025-10-20'));
 
-INSERT INTO Plan_Catalogo (nombre, descripcion, edad, estado) VALUES
-('Refuerzo de Suplementación', 'Refuerzo vitamínico y mineral preventivo', 'Mensual', 'Preventivo')
-ON DUPLICATE KEY UPDATE nombre = nombre;
+INSERT INTO Monitoreo (id_galpon, temperatura, humedad, fecha)
+SELECT @g1b, 23.1, 63.5, DATE('2025-10-20') FROM DUAL
+WHERE NOT EXISTS (SELECT 1 FROM Monitoreo WHERE id_galpon=@g1b AND fecha=DATE('2025-10-20'));
 
-INSERT INTO Plan_Catalogo (nombre, descripcion, edad, estado) VALUES
-('Plan Mixto Bioseguridad', 'Refuerzos y acciones combinadas según riesgo', 'Variable', 'Mixto')
-ON DUPLICATE KEY UPDATE nombre = nombre;
+INSERT INTO Monitoreo (id_galpon, temperatura, humedad, fecha)
+SELECT @g2a, 21.8, 68.2, DATE('2025-10-19') FROM DUAL
+WHERE NOT EXISTS (SELECT 1 FROM Monitoreo WHERE id_galpon=@g2a AND fecha=DATE('2025-10-19'));
 
--- fin del script
+INSERT INTO Monitoreo (id_galpon, temperatura, humedad, fecha)
+SELECT @g3a, 24.0, 60.0, DATE('2025-10-18') FROM DUAL
+WHERE NOT EXISTS (SELECT 1 FROM Monitoreo WHERE id_galpon=@g3a AND fecha=DATE('2025-10-18'));
+
+-- =========================
+-- 5) Medicamentos (clave natural: nombre + presentacion)
+-- =========================
+INSERT INTO Medicamentos (nombre, presentacion, stock, stock_minimo, valor_unitario)
+SELECT 'Vacuna Newcastle', 'Frasco 100ml', 50, 5, 150.00 FROM DUAL
+WHERE NOT EXISTS (SELECT 1 FROM Medicamentos WHERE nombre='Vacuna Newcastle' AND presentacion='Frasco 100ml');
+
+INSERT INTO Medicamentos (nombre, presentacion, stock, stock_minimo, valor_unitario)
+SELECT 'Antibiótico X', 'Caja 20 tabletas', 200, 20, 25.50 FROM DUAL
+WHERE NOT EXISTS (SELECT 1 FROM Medicamentos WHERE nombre='Antibiótico X' AND presentacion='Caja 20 tabletas');
+
+INSERT INTO Medicamentos (nombre, presentacion, stock, stock_minimo, valor_unitario)
+SELECT 'Suplemento A', 'Saco 25kg', 30, 5, 450.00 FROM DUAL
+WHERE NOT EXISTS (SELECT 1 FROM Medicamentos WHERE nombre='Suplemento A' AND presentacion='Saco 25kg');
+
+SET @med_newcastle := (SELECT Id_Medicamento FROM Medicamentos WHERE nombre='Vacuna Newcastle' AND presentacion='Frasco 100ml' LIMIT 1);
+SET @med_abx       := (SELECT Id_Medicamento FROM Medicamentos WHERE nombre='Antibiótico X' AND presentacion='Caja 20 tabletas' LIMIT 1);
+SET @med_supl      := (SELECT Id_Medicamento FROM Medicamentos WHERE nombre='Suplemento A' AND presentacion='Saco 25kg' LIMIT 1);
+
+-- =========================
+-- 6) Plan Sanitario (clave natural: lote + medicamento + fecha)
+-- =========================
+INSERT INTO Plan_Sanitario (Id_lote, Id_medicamento, fecha, nombre_enfermedad, muertes, descripcion, observaciones)
+SELECT @loteA_id, @med_newcastle, DATE('2025-09-15'), 'Newcastle', 2, 'Aplicación preventiva anual', 'Sin incidencias' FROM DUAL
+WHERE NOT EXISTS (
+  SELECT 1 FROM Plan_Sanitario WHERE Id_lote=@loteA_id AND Id_medicamento=@med_newcastle AND fecha=DATE('2025-09-15')
+);
+
+INSERT INTO Plan_Sanitario (Id_lote, Id_medicamento, fecha, nombre_enfermedad, muertes, descripcion, observaciones)
+SELECT @loteB_id, @med_abx, DATE('2025-10-01'), 'Infección bacteriana', 5, 'Tratamiento por diagnóstico', 'Monitorear 7 días' FROM DUAL
+WHERE NOT EXISTS (
+  SELECT 1 FROM Plan_Sanitario WHERE Id_lote=@loteB_id AND Id_medicamento=@med_abx AND fecha=DATE('2025-10-01')
+);
+
+INSERT INTO Plan_Sanitario (Id_lote, Id_medicamento, fecha, nombre_enfermedad, muertes, descripcion, observaciones)
+SELECT @loteA_id, @med_supl, DATE('2025-08-05'), 'Deficiencia nutricional', 0, 'Suplemento vitamínico', 'Mejoría observada' FROM DUAL
+WHERE NOT EXISTS (
+  SELECT 1 FROM Plan_Sanitario WHERE Id_lote=@loteA_id AND Id_medicamento=@med_supl AND fecha=DATE('2025-08-05')
+);
+
+-- =========================
+-- 7) Producción de huevos (clave natural: fecha + galpon)
+-- =========================
+INSERT INTO ProduccionHuevos (fecha, galpon, total_huevos, huevos_L, huevos_M, huevos_S, temperatura, humedad, mortalidad, responsable)
+SELECT DATE('2025-10-20'), @g1a, 320, 120, 130, 70, 22.5, 65.0, 1, 'Operador A' FROM DUAL
+WHERE NOT EXISTS (SELECT 1 FROM ProduccionHuevos WHERE galpon=@g1a AND fecha=DATE('2025-10-20'));
+
+INSERT INTO ProduccionHuevos (fecha, galpon, total_huevos, huevos_L, huevos_M, huevos_S, temperatura, humedad, mortalidad, responsable)
+SELECT DATE('2025-10-20'), @g1b, 640, 240, 260, 140, 23.1, 63.5, 2, 'Operador B' FROM DUAL
+WHERE NOT EXISTS (SELECT 1 FROM ProduccionHuevos WHERE galpon=@g1b AND fecha=DATE('2025-10-20'));
+
+INSERT INTO ProduccionHuevos (fecha, galpon, total_huevos, huevos_L, huevos_M, huevos_S, temperatura, humedad, mortalidad, responsable)
+SELECT DATE('2025-10-19'), @g2a, 280, 100, 110, 70, 21.8, 68.2, 0, 'Operador C' FROM DUAL
+WHERE NOT EXISTS (SELECT 1 FROM ProduccionHuevos WHERE galpon=@g2a AND fecha=DATE('2025-10-19'));
+
+-- =========================
+-- 8) Suministros (clave natural: fecha + tipo + item + cantidad)
+-- =========================
+INSERT INTO Suministros (fecha, tipo, item, cantidad, unidad, responsable, proveedor, motivo, valor_total)
+SELECT DATE('2025-10-10'), 'Entrada', 'Saco de alimento 25kg', 10, 'unidad', 'Proveedor X', 'Proveedor X', 'Compra semanal', 4500.00 FROM DUAL
+WHERE NOT EXISTS (
+  SELECT 1 FROM Suministros WHERE fecha=DATE('2025-10-10') AND tipo='Entrada' AND item='Saco de alimento 25kg' AND cantidad=10
+);
+
+INSERT INTO Suministros (fecha, tipo, item, cantidad, unidad, responsable, proveedor, motivo, valor_total)
+SELECT DATE('2025-10-12'), 'Salida', 'Vacuna Newcastle', 2, 'frasco', 'Operador B', 'Farmacia Interna', 'Uso en lote 1', 300.00 FROM DUAL
+WHERE NOT EXISTS (
+  SELECT 1 FROM Suministros WHERE fecha=DATE('2025-10-12') AND tipo='Salida' AND item='Vacuna Newcastle' AND cantidad=2
+);
+
+-- =========================
+-- 9) Alertas (clave natural: tipo + descripcion)
+-- =========================
+INSERT INTO Alertas (tipo, descripcion, categoria, id_item, estado)
+SELECT 'Advertencia', 'Stock de Suplemento A por debajo del mínimo', 'Stock', @med_supl, 'Activa' FROM DUAL
+WHERE NOT EXISTS (
+  SELECT 1 FROM Alertas WHERE tipo='Advertencia' AND descripcion='Stock de Suplemento A por debajo del mínimo'
+);
+
+INSERT INTO Alertas (tipo, descripcion, categoria, id_item, estado)
+SELECT 'Crítico', 'Aumento de mortalidad en Galpón 2A', 'Sanidad', @g2a, 'Activa' FROM DUAL
+WHERE NOT EXISTS (
+  SELECT 1 FROM Alertas WHERE tipo='Crítico' AND descripcion='Aumento de mortalidad en Galpón 2A'
+);
+
+-- =========================
+-- 10) Auditoría (clave natural: usuario + accion + modulo + detalle)
+-- =========================
+INSERT INTO Auditoria (id_usuario, accion, modulo, detalle, referencia)
+SELECT @admin_id, 'Login', 'Autenticación', 'Acceso exitoso del admin', 'usuario=admin' FROM DUAL
+WHERE NOT EXISTS (
+  SELECT 1 FROM Auditoria WHERE id_usuario=@admin_id AND accion='Login' AND modulo='Autenticación' AND detalle='Acceso exitoso del admin'
+);
+
+INSERT INTO Auditoria (id_usuario, accion, modulo, detalle, referencia)
+SELECT @superv_id, 'Registro Monitoreo', 'Monitoreo', 'Registro de temperatura/humedad galpón 1B', 'galpon=1B' FROM DUAL
+WHERE NOT EXISTS (
+  SELECT 1 FROM Auditoria WHERE id_usuario=@superv_id AND accion='Registro Monitoreo' AND modulo='Monitoreo' AND detalle='Registro de temperatura/humedad galpón 1B'
+);
+
+INSERT INTO Auditoria (id_usuario, accion, modulo, detalle, referencia)
+SELECT @operador_id, 'Registro Producción', 'Producción', 'Ingreso de producción diaria', 'produccion_id=NULL' FROM DUAL
+WHERE NOT EXISTS (
+  SELECT 1 FROM Auditoria WHERE id_usuario=@operador_id AND accion='Registro Producción' AND modulo='Producción' AND detalle='Ingreso de producción diaria'
+);
+
+-- =========================
+-- 11) Respaldos (clave natural: archivo)
+-- =========================
+INSERT INTO Respaldos (archivo, fecha_hora, tipo, `tamaño`, estado, usuario)
+SELECT 'backup_completo_2025-10-15.sql', '2025-10-15 02:30:00', 'Completo', '25MB', 'Exitoso', @admin_id FROM DUAL
+WHERE NOT EXISTS (
+  SELECT 1 FROM Respaldos WHERE archivo='backup_completo_2025-10-15.sql'
+);
+
+INSERT INTO Respaldos (archivo, fecha_hora, tipo, `tamaño`, estado, usuario)
+SELECT 'backup_selectivo_medicamentos_2025-10-18.sql', '2025-10-18 03:10:00', 'Selectivo', '3MB', 'Exitoso', @superv_id FROM DUAL
+WHERE NOT EXISTS (
+  SELECT 1 FROM Respaldos WHERE archivo='backup_selectivo_medicamentos_2025-10-18.sql'
+);
+
+-- =========================
+-- 12) Catálogo de planes (unique: nombre)
+-- =========================
+INSERT INTO Plan_Catalogo (nombre, descripcion, edad, estado)
+VALUES ('Programa Vacunación Ponedoras', 'Aplicar según edad y cronograma', '7–72 semanas', 'Preventivo')
+ON DUPLICATE KEY UPDATE descripcion=VALUES(descripcion), edad=VALUES(edad), estado=VALUES(estado);
+
+INSERT INTO Plan_Catalogo (nombre, descripcion, edad, estado)
+VALUES ('Desparasitación Trimestral', 'Programa de desparasitación interna/externa', 'Cada 12 semanas', 'Preventivo')
+ON DUPLICATE KEY UPDATE descripcion=VALUES(descripcion), edad=VALUES(edad), estado=VALUES(estado);
+
+INSERT INTO Plan_Catalogo (nombre, descripcion, edad, estado)
+VALUES ('Tratamiento Respiratorio', 'Manejo de síntomas respiratorios agudos', 'Según diagnóstico', 'Curativo')
+ON DUPLICATE KEY UPDATE descripcion=VALUES(descripcion), edad=VALUES(edad), estado=VALUES(estado);
+
+INSERT INTO Plan_Catalogo (nombre, descripcion, edad, estado)
+VALUES ('Refuerzo de Suplementación', 'Refuerzo vitamínico y mineral preventivo', 'Mensual', 'Preventivo')
+ON DUPLICATE KEY UPDATE descripcion=VALUES(descripcion), edad=VALUES(edad), estado=VALUES(estado);
+
+INSERT INTO Plan_Catalogo (nombre, descripcion, edad, estado)
+VALUES ('Plan Mixto Bioseguridad', 'Refuerzos y acciones combinadas según riesgo', 'Variable', 'Mixto')
+ON DUPLICATE KEY UPDATE descripcion=VALUES(descripcion), edad=VALUES(edad), estado=VALUES(estado);

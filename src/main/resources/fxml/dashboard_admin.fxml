@@ -6,7 +6,7 @@
 
 <BorderPane xmlns:fx="http://javafx.com/fxml"
             fx:controller="com.avitech.sia.iu.DashboardController"
-            prefWidth="1280" prefHeight="800">
+            prefWidth="1920" prefHeight="1080">
 
     <!-- ===== SIDEBAR (scroll propio) ===== -->
     <left>
@@ -74,7 +74,7 @@
     <!-- ===== CONTENIDO (scroll propio) ===== -->
     <center>
         <ScrollPane fx:id="spContent"
-                    fitToWidth="true" fitToHeight="false"
+                    fitToWidth="true" fitToHeight="true"
                     vbarPolicy="AS_NEEDED" hbarPolicy="AS_NEEDED"
                     pannable="true">
             <content>

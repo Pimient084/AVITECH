@@ -151,6 +151,7 @@ public class SuministrosController {
             dialogStage.initOwner(btnEntrada.getScene().getWindow());
             Scene scene = new Scene(page);
             dialogStage.setScene(scene);
+            App.configureFullScreen(dialogStage);
 
             RegEntradaSuministroController controller = loader.getController();
             controller.setDialogStage(dialogStage);
@@ -184,6 +185,7 @@ public class SuministrosController {
             dialogStage.initOwner(btnSalida.getScene().getWindow());
             Scene scene = new Scene(page);
             dialogStage.setScene(scene);
+            App.configureFullScreen(dialogStage);
 
             RegSalidaSuministroController controller = loader.getController();
             controller.setDialogStage(dialogStage);
@@ -226,6 +228,7 @@ public class SuministrosController {
             }
             dialog.setTitle("Stock de Suministros");
             dialog.setScene(new Scene(page));
+            App.configureFullScreen(dialog);
             dialog.showAndWait();
 
         } catch (Exception e) {

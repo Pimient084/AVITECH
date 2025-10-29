@@ -7,6 +7,7 @@ import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.stage.Modality;
 import javafx.stage.Stage;
 
 import java.io.IOException;
@@ -29,6 +30,32 @@ public class App extends Application {
         launch();
     }
 
+    /**
+     * Configura una ventana para pantalla completa (solo no modal) o como diálogo (modal) sin maximizar.
+     * - Para Stage no modal (ventana principal): habilita maximizado.
+     * - Para Stage modal (diálogos): NO maximiza, ajusta a escena y centra.
+     */
+    public static void configureFullScreen(Stage stage) {
+        if (stage == null) return;
+        try {
+            stage.setFullScreen(false);
+            stage.setResizable(true);
+
+            if (stage.getModality() == Modality.NONE) {
+                // Ventana principal u otras no modales: permitir maximizado
+                stage.setMaximized(true);
+                Platform.runLater(() -> {
+                    try { stage.setMaximized(true); } catch (Exception ignored) {}
+                });
+            } else {
+                // Diálogo modal: no maximizar
+                stage.setMaximized(false);
+                try { stage.sizeToScene(); } catch (Exception ignored) {}
+                try { stage.centerOnScreen(); } catch (Exception ignored) {}
+            }
+        } catch (Exception ignored) {}
+    }
+
     public static void goTo(String fxml, String title) {
         Runnable nav = () -> {
             if (mainStage == null) {
@@ -42,8 +69,26 @@ public class App extends Application {
                 }
                 FXMLLoader loader = new FXMLLoader(fxmlUrl);
                 Parent root = loader.load();
-                Scene scene = new Scene(root);
 
+                // Asegurar que siempre hay una Scene y reusar la existente para no perder el estado maximizado
+                Scene scene = mainStage.getScene();
+                if (scene == null) {
+                    scene = new Scene(root);
+                    mainStage.setScene(scene);
+                    // Maximizar en la primera carga
+                    configureFullScreen(mainStage);
+                } else {
+                    // Reforzar estado de ventana (mantener maximizado si ya lo estaba) ANTES de tocar el root
+                    boolean wasMaximized = mainStage.isMaximized();
+                    scene.setRoot(root);
+                    mainStage.setResizable(true);
+                    if (wasMaximized) {
+                        try { mainStage.setMaximized(true); } catch (Exception ignored) {}
+                        Platform.runLater(() -> { try { mainStage.setMaximized(true); } catch (Exception ignored) {} });
+                    }
+                }
+
+                // Aplicar CSS de tema (una sola vez)
                 URL cssUrl = App.class.getResource("/css/theme.css");
                 if (cssUrl == null) {
                     // Try without leading slash as fallback
@@ -62,7 +107,7 @@ public class App extends Application {
                 }
 
                 mainStage.setTitle(title);
-                mainStage.setScene(scene);
+
                 if (!mainStage.isShowing()) mainStage.show();
             } catch (Exception e) {
                 e.printStackTrace();

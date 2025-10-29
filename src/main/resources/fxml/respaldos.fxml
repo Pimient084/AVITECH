@@ -5,7 +5,7 @@
 
 <BorderPane xmlns:fx="http://javafx.com/fxml"
             fx:controller="com.avitech.sia.iu.RespaldosController"
-            prefWidth="1280" prefHeight="800">
+            prefWidth="1920" prefHeight="1080">
 
     <!-- ============ SIDEBAR ============ -->
     <left>
@@ -63,7 +63,7 @@
 
     <!-- ============ CONTENT ============ -->
     <center>
-        <ScrollPane fitToWidth="true" hbarPolicy="NEVER">
+        <ScrollPane fitToWidth="true" fitToHeight="true" hbarPolicy="NEVER">
             <content>
                 <VBox spacing="18" styleClass="content">
                     <children>

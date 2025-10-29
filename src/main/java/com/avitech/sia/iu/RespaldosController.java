@@ -8,7 +8,6 @@ import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.Alert.AlertType; // Importar AlertType
-import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.HBox;
 import javafx.stage.FileChooser;
 
@@ -54,12 +53,12 @@ public class RespaldosController {
         lblHeader.setText("Administrador");
         lblUserInfo.setText("Administrador");
 
-        // columnas
-        colArchivo.setCellValueFactory(new PropertyValueFactory<>("archivo"));
-        colFecha.setCellValueFactory(new PropertyValueFactory<>("fecha"));
-        colTipo.setCellValueFactory(new PropertyValueFactory<>("tipo"));
-        colTam.setCellValueFactory(new PropertyValueFactory<>("tamano"));
-        colEstado.setCellValueFactory(new PropertyValueFactory<>("estado"));
+        // columnas (usar lambdas compatibles con records)
+        colArchivo.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().archivo()));
+        colFecha.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().fecha()));
+        colTipo.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().tipo()));
+        colTam.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().tamano()));
+        colEstado.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().estado()));
         colAcciones.setCellValueFactory(param -> new SimpleStringProperty("acciones"));
         colAcciones.setCellFactory(c -> new TableCell<>() {
             private final Hyperlink btnAbrir = new Hyperlink("Abrir");

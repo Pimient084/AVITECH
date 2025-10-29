@@ -197,6 +197,7 @@ public class SanidadOperController {
             dialogStage.initOwner(btnRegistrarAplicacion.getScene().getWindow());
             Scene scene = new Scene(page);
             dialogStage.setScene(scene);
+            App.configureFullScreen(dialogStage);
 
             RegAplicacionController controller = loader.getController();
             controller.setDialogStage(dialogStage);
@@ -225,6 +226,7 @@ public class SanidadOperController {
             dialogStage.initOwner(btnRegistrarEvento.getScene().getWindow());
             Scene scene = new Scene(page);
             dialogStage.setScene(scene);
+            App.configureFullScreen(dialogStage);
 
             RegEventoController controller = loader.getController();
             controller.setDialogStage(dialogStage);
@@ -253,6 +255,7 @@ public class SanidadOperController {
             dialogStage.initOwner(btnRegistrarMedicamento.getScene().getWindow());
             Scene scene = new Scene(page);
             dialogStage.setScene(scene);
+            App.configureFullScreen(dialogStage);
 
             RegMedicamentoController controller = loader.getController();
             controller.setDialogStage(dialogStage);

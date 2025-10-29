@@ -204,6 +204,7 @@ public class SanidadController {
             dialogStage.initOwner(btnRegistrarAplicacion.getScene().getWindow());
             Scene scene = new Scene(page);
             dialogStage.setScene(scene);
+            App.configureFullScreen(dialogStage);
 
             RegAplicacionController controller = loader.getController();
             controller.setDialogStage(dialogStage);
@@ -232,6 +233,7 @@ public class SanidadController {
             dialogStage.initOwner(btnRegistrarEvento.getScene().getWindow());
             Scene scene = new Scene(page);
             dialogStage.setScene(scene);
+            App.configureFullScreen(dialogStage);
 
             RegEventoController controller = loader.getController();
             controller.setDialogStage(dialogStage);
@@ -260,6 +262,7 @@ public class SanidadController {
             dialogStage.initOwner(btnRegistrarMedicamento.getScene().getWindow());
             Scene scene = new Scene(page);
             dialogStage.setScene(scene);
+            App.configureFullScreen(dialogStage);
 
             RegMedicamentoController controller = loader.getController();
             controller.setDialogStage(dialogStage);
@@ -305,6 +308,7 @@ public class SanidadController {
             dialogStage.initModality(Modality.WINDOW_MODAL);
             dialogStage.initOwner(tblPlanes.getScene().getWindow());
             dialogStage.setScene(new Scene(page));
+            App.configureFullScreen(dialogStage);
 
             PlanSanitarioFormController controller = loader.getController();
             controller.setDialogStage(dialogStage);
@@ -405,6 +409,7 @@ public class SanidadController {
             dialogStage.initModality(Modality.WINDOW_MODAL);
             dialogStage.initOwner(tblPlanes.getScene().getWindow());
             dialogStage.setScene(new Scene(page));
+            App.configureFullScreen(dialogStage);
 
             PlanSanitarioFormController controller = loader.getController();
             controller.setDialogStage(dialogStage);

@@ -145,6 +145,7 @@ public class SuministrosSupervisorController {
             dialogStage.initOwner(btnEntrada.getScene().getWindow());
             Scene scene = new Scene(page);
             dialogStage.setScene(scene);
+            App.configureFullScreen(dialogStage);
 
             RegEntradaSuministroController controller = loader.getController();
             controller.setDialogStage(dialogStage);
@@ -178,6 +179,7 @@ public class SuministrosSupervisorController {
             dialogStage.initOwner(btnSalida.getScene().getWindow());
             Scene scene = new Scene(page);
             dialogStage.setScene(scene);
+            App.configureFullScreen(dialogStage);
 
             RegSalidaSuministroController controller = loader.getController();
             controller.setDialogStage(dialogStage);

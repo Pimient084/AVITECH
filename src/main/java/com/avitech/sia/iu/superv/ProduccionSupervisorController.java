@@ -199,6 +199,7 @@ public class ProduccionSupervisorController {
             dialogStage.initOwner(btnGestionarLotes.getScene().getWindow());
             Scene scene = new Scene(page);
             dialogStage.setScene(scene);
+            App.configureFullScreen(dialogStage);
 
             RegLoteController controller = loader.getController();
             controller.setDialogStage(dialogStage);
