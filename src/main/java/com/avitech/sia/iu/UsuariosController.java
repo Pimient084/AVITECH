@@ -8,6 +8,7 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
+import javafx.collections.transformation.SortedList;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
@@ -18,8 +19,6 @@ import javafx.stage.Modality;
 import javafx.stage.Stage;
 
 import java.io.IOException;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -50,18 +49,17 @@ public class UsuariosController {
 
     // Tabla
     @FXML private TableView<UserRow> tblUsuarios;
-    @FXML private TableColumn<UserRow, String> colNombre; // Will display 'usuario'
-    @FXML private TableColumn<UserRow, String> colUsuario;
-    @FXML private TableColumn<UserRow, String> colRol;
-    @FXML private TableColumn<UserRow, String> colEstado;
-    @FXML private TableColumn<UserRow, String> colUltimoAcc;
-    @FXML private TableColumn<UserRow, HBox>   colAcciones; // Changed from String to HBox
+    @FXML private TableColumn<UserRow, Integer> colId;
+    @FXML private TableColumn<UserRow, String>  colUsuario;
+    @FXML private TableColumn<UserRow, String>  colRol;
+    @FXML private TableColumn<UserRow, String>  colEmail;
+    @FXML private TableColumn<UserRow, String>  colTelefono;
+    @FXML private TableColumn<UserRow, String>  colDireccion;
+    @FXML private TableColumn<UserRow, HBox>    colAcciones;
 
     // Datos
     private final ObservableList<UserRow> masterData = FXCollections.observableArrayList();
     private FilteredList<UserRow> filteredData;
-
-    private final DateTimeFormatter DF = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
 
     @FXML
     private void initialize() {
@@ -71,18 +69,30 @@ public class UsuariosController {
 
         // Opciones filtros
         cbRol.setItems(FXCollections.observableArrayList("Todos los roles", "ADMIN", "SUPERVISOR", "OPERADOR"));
-        cbEstado.setItems(FXCollections.observableArrayList("Todos los estados", "Activo", "Inactivo")); // No hay campo 'estado' en DB
+        cbEstado.setItems(FXCollections.observableArrayList("Todos los estados", "Activo", "Inactivo")); // placeholder; no hay estado en DB
         cbRol.getSelectionModel().selectFirst();
         cbEstado.getSelectionModel().selectFirst();
 
         // Columnas
-        colNombre.setCellValueFactory(d -> new SimpleStringProperty(d.getValue().usuario())); // Display usuario in 'Nombre' column
+        colId.setCellValueFactory(d -> new SimpleObjectProperty<>(d.getValue().id()));
         colUsuario.setCellValueFactory(d -> new SimpleStringProperty(d.getValue().usuario()));
         colRol.setCellValueFactory(d -> new SimpleStringProperty(d.getValue().rol()));
-        colEstado.setCellValueFactory(d -> new SimpleStringProperty("N/A")); // No hay campo 'estado' en DB
-        colUltimoAcc.setCellValueFactory(d -> new SimpleStringProperty("N/A")); // No hay campo 'ultimo_acceso' en DB
+        colEmail.setCellValueFactory(d -> new SimpleStringProperty(nullSafe(d.getValue().email())));
+        colTelefono.setCellValueFactory(d -> new SimpleStringProperty(nullSafe(d.getValue().telefono())));
+        colDireccion.setCellValueFactory(d -> new SimpleStringProperty(nullSafe(d.getValue().direccion())));
 
         colAcciones.setCellValueFactory(d -> new SimpleObjectProperty<>(buildActions(d.getValue())));
+        colAcciones.setCellFactory(col -> new TableCell<>() {
+            @Override
+            protected void updateItem(HBox item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setGraphic(null);
+                } else {
+                    setGraphic(item);
+                }
+            }
+        });
 
         loadUserData();
 
@@ -92,23 +102,25 @@ public class UsuariosController {
         cbRol.valueProperty().addListener((obs, a, b) -> applyFilter());
         cbEstado.valueProperty().addListener((obs, a, b) -> applyFilter());
 
-        tblUsuarios.setItems(filteredData);
+        // Ordenamiento + filtrado
+        SortedList<UserRow> sortedData = new SortedList<>(filteredData);
+        sortedData.comparatorProperty().bind(tblUsuarios.comparatorProperty());
+        tblUsuarios.setItems(sortedData);
 
-        // KPIs atados
+        // KPIs básicos
         lblTotal.textProperty().bind(Bindings.size(filteredData).asString());
-        lblActivos.textProperty().bind(Bindings.createStringBinding(
-                () -> String.valueOf(filteredData.stream().filter(u -> "Activo".equals("N/A")).count()), // No hay campo 'estado' en DB
-                filteredData));
         lblAdmins.textProperty().bind(Bindings.createStringBinding(
                 () -> String.valueOf(filteredData.stream().filter(u -> "ADMIN".equals(u.rol())).count()),
                 filteredData));
-        lblConHoy.textProperty().bind(Bindings.createStringBinding(
-                () -> "N/A", // No hay campo 'ultimo_acceso' en DB
-                filteredData));
+        // Sin estado ni último acceso en DB
+        lblActivos.setText("N/A");
+        lblConHoy.setText("N/A");
 
         // CTA nuevo
         btnNuevo.setOnAction(e -> onNuevoUsuario());
     }
+
+    private String nullSafe(String s) { return s == null ? "" : s; }
 
     private void loadUserData() {
         try {
@@ -122,16 +134,22 @@ public class UsuariosController {
     private void applyFilter() {
         String q = tfSearch.getText() == null ? "" : tfSearch.getText().trim().toLowerCase();
         String rol = cbRol.getValue();
-        String estado = cbEstado.getValue(); // Not used as 'estado' is not in DB
 
         filteredData.setPredicate(u -> {
             boolean qOk = q.isEmpty()
-                    || u.usuario().toLowerCase().contains(q)
-                    || (u.email() != null && u.email().toLowerCase().contains(q));
+                    || String.valueOf(u.id()).contains(q)
+                    || contains(u.usuario(), q)
+                    || contains(u.email(), q)
+                    || contains(u.telefono(), q)
+                    || contains(u.direccion(), q)
+                    || contains(u.rol(), q);
             boolean rolOk = rol == null || rol.equals("Todos los roles") || Objects.equals(rol, u.rol());
-            // boolean estadoOk = estado == null || estado.equals("Todos los estados") || Objects.equals(estado, u.estado()); // Not used
-            return qOk && rolOk; // && estadoOk;
+            return qOk && rolOk;
         });
+    }
+
+    private boolean contains(String value, String q) {
+        return value != null && value.toLowerCase().contains(q);
     }
 
     private HBox buildActions(UserRow row) {
@@ -147,8 +165,7 @@ public class UsuariosController {
         btnPwd.setOnAction(e -> onCambiarPassword(row));
         btnDel.setOnAction(e -> onEliminarUsuario(row));
 
-        HBox box = new HBox(6, btnEdit, btnPwd, btnDel);
-        return box;
+        return new HBox(6, btnEdit, btnPwd, btnDel);
     }
 
     @FXML

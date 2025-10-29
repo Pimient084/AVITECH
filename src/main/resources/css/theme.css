@@ -197,6 +197,18 @@
 }
 .button.secondary:hover { -fx-background-color: #E6F3ED; }
 
+/* ====== Estado seleccionado para botones de tipo: outline -> relleno verde ====== */
+/* Se usa junto a "button.secondary" para que los botones de tipo mantengan padding/forma */
+.button.secondary.type-selected {
+  -fx-background-color: #16a34a; /* verde llenado */
+  -fx-text-fill: #FFFFFF;
+  -fx-border-color: transparent;
+  -fx-background-radius: 12;
+}
+.button.secondary.type-selected:hover {
+  -fx-background-color: #15803d;
+}
+
 /* ====== BOTONES PELIGRO (Eliminar) ====== */
 .button.danger {
   -fx-background-color: #B91C1C; /* rojo crítico */

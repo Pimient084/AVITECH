@@ -127,21 +127,21 @@
                             <children>
                                 <Label text="Sanidad" styleClass="card-title"/>
                                 <Label text="Medicamentos y stock sanitario" styleClass="helper"/>
-                                <Button text="Sanidad" onAction="#selSanidad" styleClass="secondary"/>
+                                <Button fx:id="btnSanidad" text="Sanidad" onAction="#selSanidad" styleClass="secondary"/>
                             </children>
                         </VBox>
                         <VBox styleClass="card" GridPane.columnIndex="1">
                             <children>
                                 <Label text="Producción" styleClass="card-title"/>
                                 <Label text="Producción de huevos por día/galpón" styleClass="helper"/>
-                                <Button text="Producción" onAction="#selProduccion" styleClass="secondary"/>
+                                <Button fx:id="btnProduccion" text="Producción" onAction="#selProduccion" styleClass="secondary"/>
                             </children>
                         </VBox>
                         <VBox styleClass="card" GridPane.columnIndex="2">
                             <children>
                                 <Label text="Alertas" styleClass="card-title"/>
                                 <Label text="Resumen de alertas recientes" styleClass="helper"/>
-                                <Button text="Alertas" onAction="#selAlertas" styleClass="secondary"/>
+                                <Button fx:id="btnAlertas" text="Alertas" onAction="#selAlertas" styleClass="secondary"/>
                             </children>
                         </VBox>
 
@@ -150,14 +150,14 @@
                             <children>
                                 <Label text="Auditoría" styleClass="card-title"/>
                                 <Label text="Eventos y acciones del sistema" styleClass="helper"/>
-                                <Button text="Auditoría" onAction="#selAuditoria" styleClass="secondary"/>
+                                <Button fx:id="btnAuditoria" text="Auditoría" onAction="#selAuditoria" styleClass="secondary"/>
                             </children>
                         </VBox>
                         <VBox styleClass="card" GridPane.rowIndex="1" GridPane.columnIndex="1">
                             <children>
                                 <Label text="Usuarios" styleClass="card-title"/>
                                 <Label text="Listado de usuarios" styleClass="helper"/>
-                                <Button text="Usuarios" onAction="#selUsuarios" styleClass="secondary"/>
+                                <Button fx:id="btnUsuarios" text="Usuarios" onAction="#selUsuarios" styleClass="secondary"/>
                             </children>
                         </VBox>
                     </GridPane>
@@ -197,7 +197,7 @@
                     </VBox>
 
 
-                    <!-- Recientes + Estadísticos -->
+                    <!-- Recientes (se eliminó el apartado de Estadísticos) -->
                     <HBox spacing="12">
                         <children>
                             <!-- Recientes -->
@@ -212,41 +212,6 @@
                                             <TableColumn fx:id="colRepAccion" text="Acciones" prefWidth="160"/>
                                         </columns>
                                     </TableView>
-                                </children>
-                            </VBox>
-
-                            <!-- Estadísticos -->
-                            <VBox styleClass="card" spacing="10" prefWidth="320">
-                                <children>
-                                    <Label text="Estadísticos" styleClass="card-title"/>
-
-                                    <GridPane hgap="8" vgap="8">
-                                        <columnConstraints>
-                                            <ColumnConstraints percentWidth="60"/>
-                                            <ColumnConstraints percentWidth="40"/>
-                                        </columnConstraints>
-
-                                        <Label text="Reportes Este Mes" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
-                                        <Label fx:id="lblKpiMes" text="0" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
-
-                                        <Label text="Más Solicitado" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
-                                        <Label fx:id="lblMasSolicitado" text="—" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
-
-                                        <Label text="Formatos Populares" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
-                                        <Label fx:id="lblFormatos" text="PDF" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
-
-                                        <Label text="Tiempo Promedio" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
-                                        <Label fx:id="lblTPromedio" text="—" GridPane.rowIndex="3" GridPane.columnIndex="1"/>
-                                    </GridPane>
-
-                                    <Separator/>
-
-                                    <Label text="Inventario" styleClass="helper"/>
-                                    <ProgressBar fx:id="pbInv" progress="0.45"/>
-                                    <Label text="Producción" styleClass="helper"/>
-                                    <ProgressBar fx:id="pbProd" progress="0.30"/>
-                                    <Label text="Sanidad" styleClass="helper"/>
-                                    <ProgressBar fx:id="pbSan" progress="0.25"/>
                                 </children>
                             </VBox>
                         </children>

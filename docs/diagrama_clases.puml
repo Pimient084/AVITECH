@@ -1,0 +1,239 @@
+@startuml
+' Dirección y estilo general
+left to right direction
+skinparam classAttributeIconSize 0
+skinparam packageStyle rectangle
+skinparam Shadowing false
+skinparam ArrowColor #666
+skinparam ClassBackgroundColor #fefefe
+skinparam ClassBorderColor #888
+skinparam PackageBackgroundColor #f7f7f7
+skinparam PackageBorderColor #999
+
+' ===================== Paquete: DB (DAO, modelos, utilidades) =====================
+package "com.avitech.sia.db" as db {
+  class DB {
+    +static Connection get()
+  }
+
+  class AuditoriaDAO <<DAO>>
+  class AlertaDAO <<DAO>>
+  class UsuarioDAO <<DAO>>
+  class SuministroDAO <<DAO>>
+  class MedicamentoDAO <<DAO>>
+  class PlanSanitarioDAO <<DAO>>
+  class PlanCatalogDAO <<DAO>>
+  class ProduccionDAO <<DAO>>
+  class GalponDAO <<DAO>>
+  class LoteDAO <<DAO>>
+  class StockRepository
+  class BackupUtil
+
+  class StockProduccion {
+    -long id
+    -String producto
+    -String lote
+    -int cantidad
+    -String ubicacion
+    -String estado
+  }
+
+  class Suministro {
+    -int id
+    -LocalDate fecha
+    -String tipo
+    -String item
+    -int cantidad
+    -String unidad
+    -String responsable
+    -String proveedor
+    -String motivo
+    -BigDecimal valorTotal
+  }
+
+  class Medicamento {
+    -int id
+    -String nombre
+    -String presentacion
+    -int stock
+    -int stockMinimo
+    -BigDecimal valorUnitario
+  }
+
+  class PlanCatalog {
+    -int id
+    -String nombre
+    -String descripcion
+    -String edad
+    -String estado
+  }
+
+  class Produccion {
+    -int id
+    -LocalDate fecha
+    -int galpon
+    -int totalHuevos
+    -int huevosL
+    -int huevosM
+    -int huevosS
+    -float temperatura
+    -float humedad
+    -int mortalidad
+    -String responsable
+  }
+
+  class "UsuarioDAO.Usuario" as UsuarioRecord <<record>> {
+    +int id
+    +String usuario
+    +String password
+    +String rol
+    +String email
+    +String telefono
+    +String direccion
+  }
+
+  class "AuditoriaDAO.AuditoriaRecord" as AuditoriaRecord <<record>> {
+    +int id
+    +int idUsuario
+    +LocalDateTime fecha
+    +String accion
+    +String modulo
+    +String detalle
+    +String referencia
+  }
+
+  class "AlertaDAO.Alerta" as AlertaRecord <<record>> {
+    +int id
+    +String tipo
+    +String descripcion
+    +String categoria
+    +LocalDateTime fecha
+    +int idItem
+    +String estado
+  }
+
+  class "GalponDAO.GalponSummary" as GalponSummary <<record>> {
+    +String nombre
+    +int capacidad
+    +int currentProduction
+  }
+
+  class "LoteDAO.Lote" as LoteRecord <<record>> {
+    +int id
+    +String nombreLote
+    +String estado
+    +int cantidadGallinas
+  }
+
+  ' Relaciones internas de DAOs y modelos
+  UsuarioDAO ..> DB : usa
+  UsuarioDAO o--> AuditoriaDAO : registra auditoría
+  AuditoriaDAO ..> DB : usa
+  AlertaDAO ..> DB : usa
+  SuministroDAO ..> DB : usa
+  MedicamentoDAO ..> DB : usa
+  PlanSanitarioDAO ..> DB : usa
+  PlanCatalogDAO ..> DB : usa
+  ProduccionDAO ..> DB : usa
+  GalponDAO ..> DB : usa
+  LoteDAO ..> DB : usa
+
+  ProduccionDAO --> Produccion
+  SuministroDAO --> Suministro
+  MedicamentoDAO --> Medicamento
+  PlanCatalogDAO --> PlanCatalog
+  AlertaDAO --> AlertaRecord
+  AuditoriaDAO --> AuditoriaRecord
+  GalponDAO --> GalponSummary
+  LoteDAO --> LoteRecord
+
+  StockRepository ..> MedicamentoDAO
+  StockRepository ..> SuministroDAO
+  StockRepository ..> ProduccionDAO
+  StockRepository ..> GalponDAO
+  StockRepository --> StockProduccion : produce
+}
+
+' ===================== Paquete: Reportes =====================
+package "com.avitech.sia.report" as report {
+  enum ReportType {
+    SANIDAD
+    PRODUCCION
+    ALERTAS
+    AUDITORIA
+    USUARIOS
+  }
+
+  class ReportRequest {
+    -ReportType type
+    -LocalDate desde
+    -LocalDate hasta
+    -String lote
+    -String articulo
+    -String categoria
+    -String responsable
+    -boolean preview
+  }
+
+  class PdfReportService
+  class RecentReportsService
+  class "RecentReportsService.RecentReport" as RecentReport <<record>> {
+    +Path path
+    +String name
+    +long size
+    +Instant modified
+  }
+
+  PdfReportService ..> report.ReportRequest
+  PdfReportService ..> db.MedicamentoDAO
+  PdfReportService ..> db.ProduccionDAO
+  PdfReportService ..> db.AlertaDAO
+  PdfReportService ..> db.AuditoriaDAO
+  PdfReportService ..> db.UsuarioDAO
+
+  RecentReportsService --> RecentReport
+}
+
+' ===================== Paquete: Seguridad =====================
+package "com.avitech.sia.security" as sec {
+  class Passwords {
+    +static String hash(String)
+    +static boolean verify(String, String)
+  }
+  class DevHash
+}
+sec.DevHash ..> sec.Passwords
+
+' ===================== Paquete: Aplicación/FX =====================
+package "com.avitech.sia" as core {
+  class App
+}
+
+package "com.avitech.sia.iu" as ui {
+  class LoginController
+  class ReportesController
+  class ProduccionController
+  class SanidadController
+  class RespaldosController
+  class UsuariosController
+}
+
+' Controladores -> DAOs/Servicios
+ui.LoginController ..> db.UsuarioDAO
+ui.UsuariosController ..> db.UsuarioDAO
+ui.ReportesController ..> report.PdfReportService
+ui.ReportesController ..> report.RecentReportsService
+ui.ReportesController ..> report.ReportRequest
+ui.ReportesController ..> report.ReportType
+ui.ProduccionController ..> db.ProduccionDAO
+ui.ProduccionController ..> db.GalponDAO
+ui.SanidadController ..> db.MedicamentoDAO
+ui.SanidadController ..> db.GalponDAO
+ui.SanidadController ..> db.PlanSanitarioDAO
+ui.SanidadController ..> db.PlanCatalogDAO
+ui.RespaldosController ..> db.BackupUtil
+
+core.App ..> ui.LoginController : carga FXML
+core.App ..> db.UsuarioDAO : currentUser (ref.)
+
+@enduml

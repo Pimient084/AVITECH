@@ -74,7 +74,7 @@
                         <!-- Filtros y CTA -->
                         <HBox spacing="10">
                             <children>
-                                <TextField fx:id="tfSearch" promptText="Buscar por nombre, usuario o email…" prefWidth="320" styleClass="input"/>
+                                <TextField fx:id="tfSearch" promptText="Buscar por usuario, email, teléfono, dirección o rol…" prefWidth="420" styleClass="input"/>
                                 <ComboBox fx:id="cbRol" prefWidth="160"/>
                                 <ComboBox fx:id="cbEstado" prefWidth="160"/>
                                 <Pane HBox.hgrow="ALWAYS"/>
@@ -126,12 +126,13 @@
 
                                 <TableView fx:id="tblUsuarios" prefHeight="520">
                                     <columns>
-                                        <TableColumn fx:id="colNombre"      text="Nombre"        prefWidth="260"/>
-                                        <TableColumn fx:id="colUsuario"     text="Usuario"       prefWidth="200"/>
-                                        <TableColumn fx:id="colRol"         text="Rol"           prefWidth="140"/>
-                                        <TableColumn fx:id="colEstado"      text="Estado"        prefWidth="120"/>
-                                        <TableColumn fx:id="colUltimoAcc"   text="Último Acceso" prefWidth="200"/>
-                                        <TableColumn fx:id="colAcciones"    text="Acciones"      prefWidth="160"/>
+                                        <TableColumn fx:id="colId"         text="ID"         prefWidth="80"/>
+                                        <TableColumn fx:id="colUsuario"    text="Usuario"    prefWidth="200"/>
+                                        <TableColumn fx:id="colRol"        text="Rol"        prefWidth="140"/>
+                                        <TableColumn fx:id="colEmail"      text="Email"      prefWidth="220"/>
+                                        <TableColumn fx:id="colTelefono"   text="Teléfono"   prefWidth="160"/>
+                                        <TableColumn fx:id="colDireccion"  text="Dirección"  prefWidth="260"/>
+                                        <TableColumn fx:id="colAcciones"   text="Acciones"   prefWidth="160"/>
                                     </columns>
                                 </TableView>
                             </children>

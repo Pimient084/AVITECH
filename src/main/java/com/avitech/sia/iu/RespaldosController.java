@@ -10,17 +10,22 @@ import javafx.scene.control.*;
 import javafx.scene.control.Alert.AlertType; // Importar AlertType
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.HBox;
+import javafx.stage.FileChooser;
 
 import java.io.File; // Para obtener el tamaño del archivo
+import java.io.IOException;
+import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.util.Arrays;
+import java.util.Optional;
 
 /**
  * Controlador base para la vista de Respaldos.
  * - Navegación lista
- * - KPIs y banner con valores dummy
- * - Tabla con acciones (descargar/restaurar/borrar)
- * Conectar a la BD más adelante.
+ * - KPIs y banner con valores reales
+ * - Tabla con acciones (abrir/restaurar/borrar)
  */
 public class RespaldosController {
 
@@ -41,6 +46,8 @@ public class RespaldosController {
 
     private final ObservableList<BackupItem> master = FXCollections.observableArrayList();
 
+    private static final DateTimeFormatter FECHA_FMT = DateTimeFormatter.ofPattern("dd/MM/yyyy, HH:mm");
+
     @FXML
     private void initialize() {
         lblSystemStatus.setText("Sistema Offline – MySQL Local");
@@ -55,12 +62,12 @@ public class RespaldosController {
         colEstado.setCellValueFactory(new PropertyValueFactory<>("estado"));
         colAcciones.setCellValueFactory(param -> new SimpleStringProperty("acciones"));
         colAcciones.setCellFactory(c -> new TableCell<>() {
-            private final Hyperlink btnDesc = new Hyperlink("Descargar");
+            private final Hyperlink btnAbrir = new Hyperlink("Abrir");
             private final Hyperlink btnRest = new Hyperlink("Restaurar");
             private final Hyperlink btnDel  = new Hyperlink("Borrar");
-            private final HBox box = new HBox(12, btnDesc, btnRest, btnDel);
+            private final HBox box = new HBox(12, btnAbrir, btnRest, btnDel);
             {
-                btnDesc.setOnAction(e -> onDescargar(getItemAtRow()));
+                btnAbrir.setOnAction(e -> onAbrirEnExplorer(getItemAtRow()));
                 btnRest.setOnAction(e -> onRestaurar(getItemAtRow()));
                 btnDel.setOnAction(e -> onBorrar(getItemAtRow()));
             }
@@ -73,10 +80,10 @@ public class RespaldosController {
             }
         });
 
-        // datos de ejemplo
-        seed();
-
         tblBackups.setItems(master);
+
+        // cargar historial real
+        loadHistory();
         refreshKpis();
         refreshBanner();
     }
@@ -95,117 +102,147 @@ public class RespaldosController {
 
     /* ==================== Acciones Generales ==================== */
     @FXML private void onNuevoRespaldo() {
-        String backupFileName = "";
-        String backupStatus = "Error";
-        String backupSize = "0 KB";
-        
         try {
-            boolean success = BackupUtil.createBackup();
-            if (success) {
-                backupStatus = "Completado";
-                // Intentar obtener el nombre del archivo de respaldo y su tamaño
-                // Esto asume que BackupUtil.createBackup() imprime el path completo del archivo
-                // Para una implementación más robusta, BackupUtil debería retornar el path del archivo creado
-                File backupDir = new File("C:/MySQLBackups");
-                File[] files = backupDir.listFiles((dir, name) -> name.startsWith("avitech_sia_db_backup_") && name.endsWith(".sql"));
-                if (files != null && files.length > 0) {
-                    // Encontrar el archivo más reciente
-                    File latestFile = null;
-                    long lastModified = Long.MIN_VALUE;
-                    for (File file : files) {
-                        if (file.lastModified() > lastModified) {
-                            latestFile = file;
-                            lastModified = file.lastModified();
-                        }
-                    }
-                    if (latestFile != null) {
-                        backupFileName = latestFile.getName();
-                        long fileSizeKB = latestFile.length() / 1024; // Tamaño en KB
-                        if (fileSizeKB > 1024) {
-                            backupSize = String.format("%.1f MB", fileSizeKB / 1024.0);
-                        } else {
-                            backupSize = fileSizeKB + " KB";
-                        }
-                    }
-                }
-                showAlert(AlertType.INFORMATION, "Respaldo Exitoso", "El respaldo de la base de datos se creó correctamente en C:/MySQLBackups.");
+            File file = BackupUtil.createBackupAndReturnFile();
+            if (file != null) {
+                showAlert(AlertType.INFORMATION, "Respaldo Exitoso", "Respaldo creado en: " + file.getAbsolutePath());
+                // añadir a la tabla
+                master.add(0, buildItemFromFile(file, "Manual", "Completado"));
+                tblBackups.refresh();
+                refreshKpis();
+                refreshBanner();
             } else {
-                showAlert(AlertType.ERROR, "Error en Respaldo", "No se pudo crear el respaldo de la base de datos. Revisa la consola para más detalles.");
+                showAlert(AlertType.ERROR, "Error en Respaldo", "No se pudo crear el respaldo de la base de datos.");
             }
         } catch (Exception e) {
-            showAlert(AlertType.ERROR, "Error en Respaldo", "Ocurrió una excepción al intentar crear el respaldo: " + e.getMessage());
+            showAlert(AlertType.ERROR, "Error en Respaldo", "Excepción al crear respaldo: " + e.getMessage());
             e.printStackTrace();
         }
-
-        var now = LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy, HH:mm"));
-        master.add(0, new BackupItem(backupFileName.isEmpty() ? "avitech_manual_" + System.currentTimeMillis() + ".sql" : backupFileName,
-                now, "Manual", backupSize, backupStatus));
-        tblBackups.refresh();
-        refreshKpis();
-        refreshBanner();
     }
 
     @FXML private void onActualizar() {
-        // futuro: volver a consultar servicio
+        loadHistory();
         tblBackups.refresh();
         refreshKpis();
     }
 
     @FXML private void onRestaurarGeneral() {
-        // placeholder para abrir diálogo de restauración general
-        info("Restauración general (placeholder)");
+        FileChooser fc = new FileChooser();
+        fc.setTitle("Seleccionar archivo .sql para restaurar");
+        fc.getExtensionFilters().add(new FileChooser.ExtensionFilter("SQL", "*.sql"));
+        File dir = new File(BackupUtil.getBackupDir());
+        if (dir.exists()) fc.setInitialDirectory(dir);
+        File chosen = fc.showOpenDialog(tblBackups.getScene().getWindow());
+        if (chosen != null) restoreWithConfirm(chosen);
     }
 
     /* ==================== Acciones por fila ==================== */
-    private void onDescargar(BackupItem it) { if (it != null) info("Descargando: " + it.archivo()); }
-    private void onRestaurar(BackupItem it) { if (it != null) info("Restaurando: " + it.archivo()); }
+    private void onAbrirEnExplorer(BackupItem it) {
+        if (it == null) return;
+        try {
+            // Abrir en explorer y seleccionar el archivo
+            new ProcessBuilder("explorer.exe", "/select,", it.file.getAbsolutePath()).start();
+        } catch (IOException e) {
+            showAlert(AlertType.ERROR, "Abrir archivo", "No se pudo abrir el explorador: " + e.getMessage());
+        }
+    }
+
+    private void onRestaurar(BackupItem it) {
+        if (it == null) return;
+        restoreWithConfirm(it.file);
+    }
+
     private void onBorrar(BackupItem it) {
         if (it == null) return;
-        master.remove(it);
-        refreshKpis();
+        Alert alert = new Alert(AlertType.CONFIRMATION);
+        alert.setTitle("Eliminar respaldo");
+        alert.setHeaderText("¿Eliminar respaldo?\n" + it.archivo());
+        alert.setContentText("Esta acción eliminará el archivo del disco.");
+        Optional<ButtonType> res = alert.showAndWait();
+        if (res.isPresent() && res.get() == ButtonType.OK) {
+            if (it.file.delete()) {
+                master.remove(it);
+                refreshKpis();
+            } else {
+                showAlert(AlertType.ERROR, "Eliminar", "No se pudo eliminar el archivo. Revisa permisos.");
+            }
+        }
+    }
+
+    private void restoreWithConfirm(File file) {
+        Alert c = new Alert(AlertType.CONFIRMATION);
+        c.setTitle("Restaurar Base de Datos");
+        c.setHeaderText("Se restaurará la BD desde:\n" + file.getName());
+        c.setContentText("Esto sobrescribirá datos actuales. ¿Continuar?");
+        Optional<ButtonType> r = c.showAndWait();
+        if (r.isPresent() && r.get() == ButtonType.OK) {
+            boolean ok = BackupUtil.restoreBackup(file);
+            if (ok) showAlert(AlertType.INFORMATION, "Restaurar", "Restauración completada.");
+            else showAlert(AlertType.ERROR, "Restaurar", "Fallo al restaurar. Revisa consola.");
+        }
     }
 
     /* ==================== Helpers ==================== */
-    private void seed() {
-        master.setAll(
-                new BackupItem("avitech_auto_20241007_020000.bak", "07/10/2024, 02:00", "Automático", "2.4 GB", "Completado"),
-                new BackupItem("avitech_auto_20241006_020000.bak", "06/10/2024, 02:00", "Automático", "2.3 GB", "Completado"),
-                new BackupItem("avitech_manual_actualizacion_20241005.bak", "05/10/2024, 14:30", "Manual", "2.2 GB", "Completado"),
-                new BackupItem("avitech_auto_20241003_020000.bak", "03/10/2024, 02:00", "Automático", "2.0 GB", "Error"),
-                new BackupItem("avitech_auto_20241002_020000.bak", "02/10/2024, 02:00", "Automático", "2.1 GB", "Completado")
-        );
+    private void loadHistory() {
+        master.clear();
+        File[] files = BackupUtil.listBackups();
+        Arrays.stream(files)
+                .map(f -> buildItemFromFile(f, deriveTipo(f.getName()), "Completado"))
+                .forEach(master::add);
+    }
+
+    private BackupItem buildItemFromFile(File f, String tipo, String estado) {
+        String fecha = formatTimestamp(f.lastModified());
+        String tam = humanSize(f.length());
+        return new BackupItem(f.getName(), fecha, tipo, tam, estado, f);
+    }
+
+    private String deriveTipo(String name) {
+        String n = name.toLowerCase();
+        if (n.contains("auto")) return "Automático";
+        return "Manual";
+    }
+
+    private String formatTimestamp(long millis) {
+        LocalDateTime dt = LocalDateTime.ofInstant(Instant.ofEpochMilli(millis), ZoneId.systemDefault());
+        return dt.format(FECHA_FMT);
+    }
+
+    private String humanSize(long bytes) {
+        double b = bytes;
+        if (b < 1024) return String.format("%d B", (long)b);
+        double kb = b / 1024.0;
+        if (kb < 1024) return String.format("%.0f KB", kb);
+        double mb = kb / 1024.0;
+        if (mb < 1024) return String.format("%.1f MB", mb);
+        double gb = mb / 1024.0;
+        return String.format("%.1f GB", gb);
     }
 
     private void refreshKpis() {
         long total = master.size();
-        long ok    = master.stream().filter(b -> b.estado().equalsIgnoreCase("Completado")).count();
-        long err   = master.stream().filter(b -> b.estado().equalsIgnoreCase("Error")).count();
-        double spaceGb = master.stream().mapToDouble(b -> parseGb(b.tamano())).sum();
+        // Asumimos estado "Completado" para archivos existentes
+        long ok = total;
+        long err = 0;
+        long totalBytes = Arrays.stream(BackupUtil.listBackups()).mapToLong(File::length).sum();
+        String space = humanSize(totalBytes);
 
         kpiTotal.setText(String.valueOf(total));
         kpiOk.setText(String.valueOf(ok));
         kpiErr.setText(String.valueOf(err));
-        kpiSpace.setText(String.format("%.1f GB", spaceGb));
+        kpiSpace.setText(space.replace(" MB", " MB").replace(" GB", " GB"));
     }
 
     private void refreshBanner() {
-        var fmt = DateTimeFormatter.ofPattern("dd/MM/yyyy, HH:mm");
-        lblAutoUltimo.setText("Último respaldo: " + LocalDateTime.now().minusDays(1).withHour(2).withMinute(0).format(fmt));
-        lblAutoProximo.setText("Próximo respaldo: " + LocalDateTime.now().plusDays(1).withHour(2).withMinute(0).format(fmt));
-        lblAutoTasa.setText("Tasa de éxito: 95.6% (4/5 respaldos)");
-        lblAutoEstado.setText("Estado: Activo");
-    }
-
-    private double parseGb(String s) {
-        try {
-            var clean = s.trim().toLowerCase().replace("gb","").trim().replace(",",".");
-            return Double.parseDouble(clean);
-        } catch (Exception e) { return 0d; }
-    }
-
-    private void info(String msg) {
-        // en real: usar diálogo propio
-        System.out.println(msg);
+        File[] files = BackupUtil.listBackups();
+        String ultimo = files.length > 0 ? formatTimestamp(files[0].lastModified()) : "—";
+        lblAutoUltimo.setText("Último respaldo: " + ultimo);
+        // Próximo respaldo (placeholder: +24h desde último o desde ahora)
+        long base = files.length > 0 ? files[0].lastModified() : System.currentTimeMillis();
+        String proximo = formatTimestamp(base + 24L*60*60*1000);
+        lblAutoProximo.setText("Próximo respaldo: " + proximo);
+        lblAutoTasa.setText("Tasa de éxito: N/A");
+        lblAutoEstado.setText("Estado: Manual");
     }
 
     private void showAlert(AlertType type, String title, String message) {
@@ -217,5 +254,5 @@ public class RespaldosController {
     }
 
     /* DTO record para mayor claridad */
-    public record BackupItem(String archivo, String fecha, String tipo, String tamano, String estado) {}
+    public record BackupItem(String archivo, String fecha, String tipo, String tamano, String estado, File file) {}
 }

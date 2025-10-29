@@ -2,7 +2,6 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<?import javafx.scene.text.Text?>
 
 <BorderPane xmlns:fx="http://javafx.com/fxml"
             fx:controller="com.avitech.sia.iu.SuministrosController"
@@ -166,15 +165,6 @@
                                 </TableView>
                             </children>
                         </VBox>
-
-                        <!-- Acciones rápidas -->
-                        <HBox spacing="10">
-                            <children>
-                                <Button text="Entrada rápida" styleClass="primary" onAction="#onEntrada"/>
-                                <Button text="Salida rápida"  styleClass="primary" onAction="#onSalida"/>
-                                <Button text="Exportar CSV"   styleClass="secondary" onAction="#onExportar"/>
-                            </children>
-                        </HBox>
 
                     </children>
                     <padding><Insets topRightBottomLeft="16"/></padding>
